@@ -1,0 +1,26 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# SQLite databases & temp files
+*.db
+*.sqlite3
+backend/baby_wonderland.db
+
+# Logs & temp
+*.log
+scratch/
+
+# IDE & OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

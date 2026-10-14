@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Baby WonderLand - Sensory Play, Magic Chimes & Interactive Fun</title>
+  <meta name="description" content="A delightful, sensory-rich interactive web playground for babies and toddlers featuring eye-tracking cartoon characters, finger paints, soothing pentatonic chimes, lightning trike adventures, and a friendly toy robot.">
+  <meta name="theme-color" content="#FF7597">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧸</text></svg>">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Visual Particles & Touch Waves Canvas Overlay -->
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- Baby Lock Protected Banner -->
+    <div id="baby-lock-banner" class="baby-lock-banner">
+      <span>🔒</span> Baby-Lock Active! (Press ESC or tap Lock icon to unlock)
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="site-header">
+      <div class="brand-badge" id="brand-badge" title="Baby WonderLand">
+        <span class="brand-icon">🧸</span>
+        <span class="brand-title">Baby WonderLand</span>
+      </div>
+
+      <nav class="nav-tabs" aria-label="Playground Zones">
+        <button class="nav-tab-btn active" data-tab="mascot" id="tab-mascot">
+          <span class="tab-icon">🐻</span>
+          <span>Pip the Bear</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="paint" id="tab-paint">
+          <span class="tab-icon">🎨</span>
+          <span>Finger Paints</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="trike" id="tab-trike">
+          <span class="tab-icon">⚡</span>
+          <span>Lightning Trike</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="robot" id="tab-robot">
+          <span class="tab-icon">🤖</span>
+          <span>Toy Robot</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="gallery" id="tab-gallery">
+          <span class="tab-icon">🌟</span>
+          <span>Stickers & Art</span>
+        </button>
+      </nav>
+
+      <div class="header-controls">
+        <button class="control-btn" id="night-mode-btn" title="Toggle Bedtime Night Mode" aria-label="Toggle Night Mode">🌙</button>
+        <button class="control-btn" id="sound-toggle-btn" title="Mute or Unmute Audio" aria-label="Sound Toggle">🔊</button>
+        <button class="control-btn" id="baby-lock-btn" title="Fullscreen Baby Lock" aria-label="Baby Lock">🔓</button>
+      </div>
+    </header>
+
+    <!-- Ambient Sky & Celestial Elements -->
+    <div class="ambient-scene">
+      <div class="celestial-body" id="celestial-toggle" title="Tap to switch Day / Night!">
+        <div class="celestial-sun">
+          <span class="sun-face">☀️</span>
+        </div>
+        <div class="celestial-moon">
+          <span class="sun-face">🌙</span>
+        </div>
+      </div>
+
+      <div class="floating-cloud cloud-1" title="Tap the fluffy cloud!">☁️</div>
+      <div class="floating-cloud cloud-2" title="Tap the fluffy cloud!">☁️</div>
+      <div class="floating-cloud cloud-3" title="Tap the fluffy cloud!">☁️</div>
+    </div>
+
+    <!-- ====================================================================
+         ZONE 1: Pip the Bear (Cursor & Touch Tracking Cartoon Character)
+         ==================================================================== -->
+    <main class="play-view active" id="view-mascot">
+      <div class="mascot-stage">
+        <div class="creative-mascot-badge" title="Pip the 3D Wonder Bear!">
+          <img src="assets/mascot.jpg" alt="Pip Mascot"/>
+        </div>
+
+        <div class="mascot-speech-bubble" id="mascot-speech">Hi little friend! 🐻✨</div>
+
+        <div class="mascot-container" id="mascot-container" title="Click or tap Pip to make him giggle!">
+          <svg class="mascot-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="bearBodyGrad" cx="40%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#FFE0B2"/>
+                <stop offset="70%" stop-color="#FFB74D"/>
+                <stop offset="100%" stop-color="#FFA726"/>
+              </radialGradient>
+              <radialGradient id="earInnerGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#FFD1DC"/>
+                <stop offset="100%" stop-color="#FF8DA1"/>
+              </radialGradient>
+              <radialGradient id="muzzleGrad" cx="50%" cy="40%" r="55%">
+                <stop offset="0%" stop-color="#FFFDF9"/>
+                <stop offset="100%" stop-color="#FFE8D6"/>
+              </radialGradient>
+            </defs>
+
+            <!-- Ears -->
+            <g id="ear-left" style="transform-origin: 85px 85px; cursor: pointer;">
+              <circle cx="85" cy="85" r="42" fill="url(#bearBodyGrad)"/>
+              <circle cx="85" cy="85" r="26" fill="url(#earInnerGrad)"/>
+            </g>
+
+            <g id="ear-right" style="transform-origin: 215px 85px; cursor: pointer;">
+              <circle cx="215" cy="85" r="42" fill="url(#bearBodyGrad)"/>
+              <circle cx="215" cy="85" r="26" fill="url(#earInnerGrad)"/>
+            </g>
+
+            <!-- Main Chubby Head -->
+            <ellipse cx="150" cy="165" rx="95" ry="85" fill="url(#bearBodyGrad)"/>
+
+            <!-- Cute Bear Muzzle -->
+            <ellipse cx="150" cy="180" rx="46" ry="34" fill="url(#muzzleGrad)"/>
+
+            <!-- Nose (Clickable Boop!) -->
+            <path d="M 142 165 C 142 160, 158 160, 158 165 C 158 174, 142 174, 142 165 Z" fill="#6D4C41"/>
+
+            <!-- Cute Smiling Mouth -->
+            <path id="mascot-mouth" d="M 135 185 Q 150 200 165 185" stroke="#6D4C41" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+            <!-- Rosy Cheeks (Blush) -->
+            <ellipse id="blush-left" cx="88" cy="178" rx="18" ry="12" fill="#FFB6C1" opacity="0.85"/>
+            <ellipse id="blush-right" cx="212" cy="178" rx="18" ry="12" fill="#FFB6C1" opacity="0.85"/>
+
+            <!-- Big Expressive Cartoon Eyes -->
+            <!-- Left Eye -->
+            <g id="eye-left-socket">
+              <ellipse cx="115" cy="140" rx="20" ry="24" fill="#FFFFFF" stroke="#D7CCC8" stroke-width="2"/>
+              <g id="pupil-left" class="pupil">
+                <circle cx="115" cy="140" r="12" fill="#3E2723"/>
+                <!-- Eye Sparkle Highlights -->
+                <circle cx="111" cy="135" r="4.5" fill="#FFFFFF"/>
+                <circle cx="118" cy="144" r="2" fill="#FFFFFF"/>
+              </g>
+              <!-- Eyelid for Blinking -->
+              <ellipse class="eyelid" cx="115" cy="140" rx="21" ry="25" fill="#FFB74D" opacity="0" style="transition: opacity 0.08s;"/>
+            </g>
+
+            <!-- Right Eye -->
+            <g id="eye-right-socket">
+              <ellipse cx="185" cy="140" rx="20" ry="24" fill="#FFFFFF" stroke="#D7CCC8" stroke-width="2"/>
+              <g id="pupil-right" class="pupil">
+                <circle cx="185" cy="140" r="12" fill="#3E2723"/>
+                <!-- Eye Sparkle Highlights -->
+                <circle cx="181" cy="135" r="4.5" fill="#FFFFFF"/>
+                <circle cx="188" cy="144" r="2" fill="#FFFFFF"/>
+              </g>
+              <!-- Eyelid for Blinking -->
+              <ellipse class="eyelid" cx="185" cy="140" rx="21" ry="25" fill="#FFB74D" opacity="0" style="transition: opacity 0.08s;"/>
+            </g>
+
+            <!-- Cute Eyebrows -->
+            <path d="M 102 115 Q 115 110 128 116" stroke="#8D6E63" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M 172 116 Q 185 110 198 115" stroke="#8D6E63" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+            <!-- Cute Paws Peeking Up -->
+            <ellipse cx="90" cy="245" rx="24" ry="20" fill="url(#bearBodyGrad)"/>
+            <circle cx="90" cy="242" r="9" fill="url(#earInnerGrad)"/>
+            <circle cx="78" cy="232" r="4" fill="url(#earInnerGrad)"/>
+            <circle cx="90" cy="228" r="4" fill="url(#earInnerGrad)"/>
+            <circle cx="102" cy="232" r="4" fill="url(#earInnerGrad)"/>
+
+            <ellipse cx="210" cy="245" rx="24" ry="20" fill="url(#bearBodyGrad)"/>
+            <circle cx="210" cy="242" r="9" fill="url(#earInnerGrad)"/>
+            <circle cx="198" cy="232" r="4" fill="url(#earInnerGrad)"/>
+            <circle cx="210" cy="228" r="4" fill="url(#earInnerGrad)"/>
+            <circle cx="222" cy="232" r="4" fill="url(#earInnerGrad)"/>
+          </svg>
+        </div>
+
+        <div class="mascot-action-bar">
+          <button class="mascot-action-btn" id="mascot-tickle-btn">
+            <span>💖</span> Tickle Pip!
+          </button>
+          <button class="mascot-action-btn" id="mascot-sing-btn">
+            <span>🎶</span> Sing a Song
+          </button>
+          <button class="mascot-action-btn" id="mascot-peek-btn">
+            <span>🙈</span> Peek-a-boo!
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ====================================================================
+         ZONE 2: Finger Paints (Canvas Drawing & Floating Shapes)
+         ==================================================================== -->
+    <section class="play-view" id="view-paint">
+      <div class="paint-wrapper" id="paint-stage">
+        <canvas id="paint-canvas"></canvas>
+
+        <div class="paint-toolbar">
+          <!-- Color Swatches -->
+          <div class="palette-swatches">
+            <button class="color-swatch active" data-color="#FF6584" style="background:#FF6584" title="Pink"></button>
+            <button class="color-swatch" data-color="#FFB703" style="background:#FFB703" title="Yellow"></button>
+            <button class="color-swatch" data-color="#06D6A0" style="background:#06D6A0" title="Mint"></button>
+            <button class="color-swatch" data-color="#118AB2" style="background:#118AB2" title="Blue"></button>
+            <button class="color-swatch" data-color="#8338EC" style="background:#8338EC" title="Purple"></button>
+            <button class="color-swatch" data-color="#FF9F1C" style="background:#FF9F1C" title="Orange"></button>
+          </div>
+
+          <!-- Brush Modes -->
+          <div class="brush-modes">
+            <button class="brush-mode-btn active" data-mode="glow">✨ Glow</button>
+            <button class="brush-mode-btn" data-mode="rainbow">🌈 Rainbow</button>
+            <button class="brush-mode-btn" data-mode="bubbles">🫧 Bubbles</button>
+          </div>
+
+          <!-- Cute Baby Stamps -->
+          <div class="stamp-selector">
+            <button class="stamp-btn" data-stamp="⭐" title="Star Stamp">⭐</button>
+            <button class="stamp-btn" data-stamp="🐥" title="Duck Stamp">🐥</button>
+            <button class="stamp-btn" data-stamp="🐾" title="Paw Stamp">🐾</button>
+            <button class="stamp-btn" data-stamp="🌸" title="Flower Stamp">🌸</button>
+          </div>
+
+          <!-- Clear Canvas Button -->
+          <button class="canvas-action-btn" id="clear-canvas-btn">
+            <span>🧹</span> Clear
+          </button>
+
+          <!-- Save Canvas to Gallery Button -->
+          <button class="save-canvas-btn" id="save-canvas-btn" title="Save painting to Baby Gallery!">
+            <span>💾</span> Save Art
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ZONE 3: Lightning Trike (Interactive Parallax Runner Mini-Game)
+         ==================================================================== -->
+    <section class="play-view" id="view-trike">
+      <div class="trike-stage">
+        <canvas id="trike-canvas"></canvas>
+
+        <div class="creative-trike-badge" title="Lightning Trike Champion!">
+          <img src="assets/trike.jpg" alt="Lightning Trike"/>
+        </div>
+
+        <div class="trike-overlay-hud">
+          <div class="score-badge">
+            <span class="score-star-icon">⭐</span>
+            <span>Stars: </span>
+            <span id="trike-score-val">0</span>
+          </div>
+        </div>
+
+        <div class="trike-touch-prompter">
+          <span>👆</span> Tap anywhere on screen to Jump!
+        </div>
+
+        <div class="trike-controls">
+          <button class="trike-btn bell-btn" id="trike-bell-btn" title="Ring Bell (Ding-Ding!)">🔔</button>
+          <button class="trike-btn jump-btn" id="trike-jump-btn" title="Jump High!">🦘</button>
+          <button class="trike-btn" id="trike-turbo-btn" title="Lightning Turbo Boost!">⚡</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ZONE 4: Toy Robot Companion ("Robo-Pal" AI Lab)
+         ==================================================================== -->
+    <section class="play-view" id="view-robot">
+      <div class="robot-room">
+        <div class="creative-robot-badge" title="Robo-Pal 3D Sticker!">
+          <img src="assets/robot.jpg" alt="Robo-Pal"/>
+        </div>
+
+        <div class="robot-speech-card" id="robot-speech">
+          Beep-boop! Hello little sunshine! Let's play! 🤖✨
+        </div>
+
+        <div class="robot-container" id="robot-container" title="Tap Robo-Pal to tickle him!">
+          <svg viewBox="0 0 320 380" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="robotBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFFFFF"/>
+                <stop offset="50%" stop-color="#E2E8F0"/>
+                <stop offset="100%" stop-color="#CBD5E1"/>
+              </linearGradient>
+              <linearGradient id="robotAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38BDF8"/>
+                <stop offset="100%" stop-color="#0284C7"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Antenna & Glowing Light -->
+            <line x1="160" y1="52" x2="160" y2="18" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
+            <circle id="antenna-light" cx="160" cy="14" r="12" fill="#38BDF8" style="transition: fill 0.3s; filter: drop-shadow(0 0 8px #38BDF8);"/>
+
+            <!-- Robot Head -->
+            <rect x="75" y="52" width="170" height="135" rx="36" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="4"/>
+
+            <!-- Cute Ear Bolts / Dials -->
+            <circle cx="65" cy="120" r="14" fill="url(#robotAccent)"/>
+            <circle cx="255" cy="120" r="14" fill="url(#robotAccent)"/>
+
+            <!-- Robot Body -->
+            <rect x="90" y="200" width="140" height="120" rx="28" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="4"/>
+
+            <!-- Robot Tummy Meter (Heart & Energy Gauge) -->
+            <rect x="115" y="225" width="90" height="65" rx="14" fill="#0F172A"/>
+            <circle cx="160" cy="255" r="18" fill="#F43F5E"/>
+            <path d="M 152 254 C 152 248, 168 248, 168 254 C 168 262, 152 268, 152 268 C 152 268, 136 262, 136 254 C 136 248, 152 248, 152 254 Z" fill="#FFFFFF"/>
+
+            <!-- Little Waving Robot Arms -->
+            <rect x="52" y="220" width="30" height="16" rx="8" fill="url(#robotAccent)" transform="rotate(25 52 220)"/>
+            <circle cx="48" cy="242" r="10" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="2"/>
+
+            <rect x="238" y="220" width="30" height="16" rx="8" fill="url(#robotAccent)" transform="rotate(-25 268 220)"/>
+            <circle cx="272" cy="242" r="10" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="2"/>
+
+            <!-- Cute Feet -->
+            <ellipse cx="120" cy="335" rx="22" ry="12" fill="url(#robotAccent)"/>
+            <ellipse cx="200" cy="335" rx="22" ry="12" fill="url(#robotAccent)"/>
+          </svg>
+
+          <!-- LED Interactive Face Screen -->
+          <div class="robot-screen-face" id="robot-face">
+            ( ^ _ ^ )
+          </div>
+        </div>
+
+        <!-- Robot Dialogue / Action Triggers -->
+        <div class="robot-dialogue-grid">
+          <button class="robot-pill-btn" id="robo-btn-hello">
+            <span>👋</span> Say Hello!
+          </button>
+          <button class="robot-pill-btn" id="robo-btn-tickle">
+            <span>😂</span> Tickle Me!
+          </button>
+          <button class="robot-pill-btn" id="robo-btn-dance">
+            <span>💃</span> Dance Party!
+          </button>
+          <button class="robot-pill-btn" id="robo-btn-peekaboo">
+            <span>🙈</span> Peekaboo!
+          </button>
+          <button class="robot-pill-btn" id="robo-btn-highfive">
+            <span>🖐️</span> High Five!
+          </button>
+          <button class="robot-pill-btn" id="robo-btn-lullaby">
+            <span>🌙</span> Lullaby
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ZONE 5: Baby Sticker Book & Art Gallery (SQLite + FastAPI Connected)
+         ==================================================================== -->
+    <section class="play-view" id="view-gallery">
+      <div class="gallery-stage">
+        <!-- Baby Profile Header Card -->
+        <div class="gallery-header-row">
+          <div class="profile-card">
+            <img src="assets/mascot.jpg" alt="Baby Avatar" class="profile-avatar-sticker"/>
+            <div class="profile-details-col">
+              <div class="profile-welcome-badge">Hello, <span id="baby-welcome-name">Little Sunshine</span>! 🌟</div>
+              <div class="profile-inputs">
+                <input type="text" id="baby-name-input" class="profile-input-text" placeholder="Baby Name" value="Little Sunshine" title="Baby's Name"/>
+                <input type="number" id="baby-age-input" class="profile-input-age" value="12" min="1" max="72" title="Age in months"/>
+                <span style="font-size:0.9rem; font-weight:700; color: #718096;">months</span>
+                <input type="color" id="baby-color-picker" value="#FF6584" title="Favorite sensory color" style="border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;"/>
+                <button class="profile-save-btn" id="save-profile-btn">💾 Save Profile</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Creative 3D Stickers Showcase Row -->
+        <div class="sticker-book-section">
+          <h3 class="section-title"><span>🌟</span> Creative 3D Sticker Badges</h3>
+          <div class="creative-stickers-row">
+            <div class="creative-sticker-card" title="Lightning Trike Speedster!">
+              <img src="assets/trike.jpg" alt="Lightning Trike"/>
+            </div>
+            <div class="creative-sticker-card" title="Robo-Pal Companion!">
+              <img src="assets/robot.jpg" alt="Toy Robot"/>
+            </div>
+            <div class="creative-sticker-card" title="Sensory Sticker Pack!">
+              <img src="assets/stickers.jpg" alt="Baby Sticker Pack"/>
+            </div>
+            <div class="creative-sticker-card" title="Pip the Bear Mascot!">
+              <img src="assets/mascot.jpg" alt="Pip Mascot"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unlocked Milestones & Achievements -->
+        <div class="sticker-book-section">
+          <h3 class="section-title"><span>🏆</span> Unlocked Baby Badges</h3>
+          <div class="stickers-showcase-grid" id="stickers-grid">
+            <!-- Dynamically populated from backend SQLite -->
+          </div>
+        </div>
+
+        <!-- Saved Finger Paintings Gallery -->
+        <div class="artworks-gallery-section">
+          <h3 class="section-title"><span>🎨</span> Baby's Finger Painting Gallery</h3>
+          <div class="artworks-grid" id="gallery-grid">
+            <!-- Dynamically populated from backend SQLite -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/api.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/character.js"></script>
+  <script src="js/paint.js"></script>
+  <script src="js/trike.js"></script>
+  <script src="js/robot.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
