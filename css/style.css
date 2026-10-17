@@ -455,123 +455,198 @@ button, a, input, select, textarea,
   user-select: none;
 }
 
-.mascot-container.big-teddy-container {
+/* ==========================================================================
+   Pip the Bear: Dynamic 3D Rigged Puppet (Face, Eyes & Body Move to Magic Stick)
+   ========================================================================== */
+.pip-playmat-shadow {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(84vw, 440px);
+  height: 48px;
+  background: radial-gradient(ellipse at center, rgba(140, 80, 25, 0.26) 0%, rgba(140, 80, 25, 0.08) 55%, transparent 75%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  filter: blur(5px);
+  animation: shadowBreathe 3.6s ease-in-out infinite alternate;
+}
+
+@keyframes shadowBreathe {
+  0% { transform: translateX(-50%) scale(0.96); opacity: 0.75; }
+  100% { transform: translateX(-50%) scale(1.04); opacity: 1; }
+}
+
+.pip-puppet-container {
   position: relative;
-  width: min(84vw, 480px);
-  max-height: 72vh;
-  aspect-ratio: 1 / 1;
+  width: min(85vw, 440px);
+  aspect-ratio: 740 / 830;
+  max-height: 68vh;
+  margin: 0 auto;
   cursor: var(--cursor-wand);
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transform-origin: center bottom;
-  animation: teddyGentleFloat 4s ease-in-out infinite alternate;
   user-select: none;
   z-index: 10;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
-@keyframes teddyGentleFloat {
-  0% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-8px) scale(1.015); }
-  100% { transform: translateY(0px) scale(1); }
+/* Body Layer: Overalls, Tummy, Sitting Legs & Paws */
+.pip-body-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 54.2%;
+  transform-origin: 50% 92%;
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+  z-index: 4;
+  animation: babyBreathe 3.6s ease-in-out infinite alternate;
 }
 
-.big-teddy-frame {
-  position: relative;
+@keyframes babyBreathe {
+  0% { transform: scale(1); }
+  50% { transform: scaleY(1.02) scaleX(1.01); }
+  100% { transform: scale(1); }
+}
+
+.pip-body-img {
   width: 100%;
   height: 100%;
-  border-radius: 40px;
-  overflow: hidden;
-  box-shadow: 
-    0 24px 60px -10px rgba(110, 60, 20, 0.32),
-    0 12px 28px -5px rgba(255, 117, 151, 0.22),
-    inset 0 0 0 4px rgba(255, 255, 255, 0.85);
-  background: #FFF7ED;
-}
-
-.big-teddy-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   pointer-events: none;
+  filter: drop-shadow(0 16px 28px rgba(110, 60, 20, 0.25));
 }
 
-.teddy-rim-light {
+/* Head Layer: Turns in 3D (Yaw, Pitch, Roll) and Leans to Magic Stick */
+.pip-head-layer {
   position: absolute;
-  inset: 0;
-  border-radius: 40px;
-  background: radial-gradient(circle at 50% 30%, transparent 60%, rgba(255, 243, 205, 0.25) 85%, rgba(255, 182, 193, 0.2) 100%);
-  pointer-events: none;
-  z-index: 4;
-}
-
-/* Eye Tracking Sockets & Pupils */
-.teddy-eye-socket {
-  position: absolute;
-  width: 7.2%;
-  height: 7.2%;
-  border-radius: 50%;
-  overflow: hidden;
-  pointer-events: none;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 51.8%;
+  transform-origin: 50% 88%; /* Neck joint pivot */
+  transition: transform 0.08s cubic-bezier(0.25, 0.7, 0.25, 1);
+  will-change: transform;
+  transform-style: preserve-3d;
   z-index: 6;
 }
 
+.pip-head-img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  z-index: 3; /* sits over eye apertures */
+  filter: drop-shadow(0 12px 22px rgba(110, 60, 20, 0.22));
+}
+
+/* Eye Sockets: Placed Behind Fur Cutouts */
+.pip-eye-socket {
+  position: absolute;
+  width: 7.8%;
+  height: 14.8%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2; /* behind head img cutouts */
+  pointer-events: none;
+  background: #FFFDF8;
+  box-shadow: inset 0 2px 5px rgba(50, 25, 10, 0.65);
+}
+
 .eye-socket-left {
-  left: 33.6%;
-  top: 29.5%;
+  left: 43.0%;
+  top: 58.1%;
 }
 
 .eye-socket-right {
-  left: 54.2%;
-  top: 27.2%;
+  left: 65.7%;
+  top: 57.9%;
 }
 
-.teddy-pupil {
+.pip-sclera {
+  position: relative;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #5D4037 0%, #2A170E 60%, #100602 100%);
-  position: relative;
-  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.4);
-  transition: transform 0.08s ease-out;
+  background: radial-gradient(circle at 50% 45%, #FFFFFF 40%, #FAF0E6 85%, #E0CEBE 100%);
+  overflow: hidden;
 }
 
-.pupil-glint {
+.pip-iris-pupil {
   position: absolute;
-  top: 18%;
-  left: 20%;
-  width: 38%;
-  height: 38%;
-  background: #FFFFFF;
+  top: 50%;
+  left: 50%;
+  width: 84%;
+  height: 88%;
+  margin-top: -44%;
+  margin-left: -42%;
   border-radius: 50%;
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.9);
+  background: radial-gradient(circle at 45% 40%, #6D4C41 0%, #3E2723 55%, #150A05 92%);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.75), inset 0 2px 3px rgba(255, 255, 255, 0.35);
+  transition: transform 0.05s ease-out;
 }
 
-.pupil-sparkle {
+.pip-pupil-center {
   position: absolute;
-  bottom: 16%;
-  right: 16%;
-  font-size: 7px;
-  color: #FEF08A;
-  opacity: 0.85;
+  top: 50%;
+  left: 50%;
+  width: 58%;
+  height: 58%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #0D0503;
 }
 
-.teddy-eyelid {
+.pip-glint-main {
+  position: absolute;
+  top: 16%;
+  left: 18%;
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.95);
+}
+
+.pip-glint-sub {
+  position: absolute;
+  bottom: 15%;
+  right: 15%;
+  font-size: 6px;
+  color: #FEF08A;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.pip-eyelid {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #C99668;
+  background: linear-gradient(180deg, #D4A373 0%, #E7BC91 80%, #C58E5C 100%);
   border-radius: 50%;
   opacity: 0;
-  transition: opacity 0.08s ease;
-  z-index: 7;
+  transform: translateY(-100%);
+  transition: transform 0.12s ease-in-out, opacity 0.08s ease;
+  z-index: 5;
+}
+
+.pip-eyelid.closed {
+  opacity: 1;
+  transform: translateY(0%);
 }
 
 /* Blushing Cheeks */
 .teddy-blush {
   position: absolute;
-  font-size: 16px;
+  font-size: 20px;
   color: #FF4081;
   opacity: 0;
   filter: drop-shadow(0 0 8px #FF4081);
@@ -581,13 +656,13 @@ button, a, input, select, textarea,
 }
 
 .blush-left {
-  left: 28%;
-  top: 38%;
+  left: 36%;
+  top: 76%;
 }
 
 .blush-right {
-  left: 62%;
-  top: 36%;
+  left: 72%;
+  top: 76%;
 }
 
 /* Interactive Hit Hotspots */
@@ -600,14 +675,15 @@ button, a, input, select, textarea,
 }
 
 .hotspot:hover {
-  transform: scale(1.15);
+  transform: scale(1.18);
 }
 
 .hotspot-nose {
-  left: 47%;
-  top: 33.5%;
-  width: 10%;
-  height: 7%;
+  left: 54.3%;
+  top: 69.3%;
+  width: 13%;
+  height: 11%;
+  transform: translate(-50%, -50%);
 }
 
 .hotspot-nose .hotspot-pulse {
@@ -616,47 +692,69 @@ button, a, input, select, textarea,
   height: 100%;
   border-radius: 50%;
   background: rgba(255, 117, 151, 0.0);
-  transition: background 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .hotspot-nose:hover .hotspot-pulse {
   background: rgba(255, 117, 151, 0.25);
-  box-shadow: 0 0 12px rgba(255, 117, 151, 0.6);
+  box-shadow: 0 0 14px rgba(255, 117, 151, 0.7);
 }
 
 .hotspot-ear-left {
-  left: 12%;
-  top: 10%;
-  width: 22%;
-  height: 22%;
+  left: 30%;
+  top: 21%;
+  width: 25%;
+  height: 25%;
+  transform: translate(-50%, -50%);
 }
 
 .hotspot-ear-right {
-  left: 49%;
-  top: 5%;
-  width: 22%;
-  height: 22%;
+  left: 70%;
+  top: 21%;
+  width: 25%;
+  height: 25%;
+  transform: translate(-50%, -50%);
 }
 
 .hotspot-honey {
-  left: 44.5%;
-  top: 64.5%;
-  width: 13%;
-  height: 13%;
+  left: 56.5%;
+  top: 38.2%;
+  width: 18%;
+  height: 22%;
+  transform: translate(-50%, -50%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.honey-badge {
+  font-size: 1.4rem;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+
+.hotspot-honey:hover .honey-badge {
+  opacity: 1;
+  transform: scale(1.25);
+  filter: drop-shadow(0 0 10px #F59E0B);
 }
 
 .hotspot-paw-left {
-  left: 26%;
+  left: 27%;
   top: 80%;
-  width: 20%;
-  height: 18%;
+  width: 22%;
+  height: 24%;
+  transform: translate(-50%, -50%);
 }
 
 .hotspot-paw-right {
-  left: 61%;
-  top: 76%;
-  width: 20%;
-  height: 18%;
+  left: 73%;
+  top: 80%;
+  width: 22%;
+  height: 24%;
+  transform: translate(-50%, -50%);
 }
 
 /* Floating Interactive Bubbles around Pip */

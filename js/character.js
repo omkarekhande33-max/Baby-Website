@@ -1,12 +1,15 @@
 /**
- * Baby WonderLand - Interactive Mascot Controller ("Pip the Big 3D Wonder Bear")
- * Real-time eye tracking, cursor 3D-tilt physics, and delightful baby micro-reactions.
+ * Baby WonderLand - Interactive Mascot Controller ("Pip the 3D Wonder Bear")
+ * Rigged Puppet: Face (Head), Eyes, and Body move smoothly according to the magic stick.
  */
 
 class MascotController {
   constructor() {
     this.container = document.getElementById('mascot-container');
-    this.speechBubble = document.getElementById('mascot-speech');
+    this.head = document.getElementById('pip-head');
+    this.body = document.getElementById('pip-body');
+    this.eyeSocketLeft = document.getElementById('eye-socket-left');
+    this.eyeSocketRight = document.getElementById('eye-socket-right');
     this.pupilLeft = document.getElementById('pupil-left');
     this.pupilRight = document.getElementById('pupil-right');
     this.blushLeft = document.getElementById('blush-left');
@@ -17,20 +20,27 @@ class MascotController {
     this.honey = document.getElementById('mascot-honey');
     this.pawLeft = document.getElementById('mascot-paw-left');
     this.pawRight = document.getElementById('mascot-paw-right');
+    this.speechBubble = document.getElementById('mascot-speech');
+
+    // Action bar buttons
+    this.tickleBtn = document.getElementById('mascot-tickle-btn');
+    this.singBtn = document.getElementById('mascot-sing-btn');
+    this.peekBtn = document.getElementById('mascot-peek-btn');
 
     this.speechTimer = null;
     this.blinkTimer = null;
     this.isGiggling = false;
+    this.isSinging = false;
 
     this.phrases = [
       "Peek-a-boo! 🥰",
-      "I see you! 👀✨",
+      "I see your magic stick! ✨",
       "Giggle giggle! 🐻",
-      "High five, baby! 🖐️",
-      "You're doing great! 🌟",
+      "High five, baby star! 🌟",
       "Boop my nose! 👃",
       "Tickle my honey pot! 🍯",
-      "Yay, so bright! 🌈"
+      "You're so magical! 🪄",
+      "Yay, let's play! 🎈"
     ];
 
     this.init();
@@ -39,7 +49,7 @@ class MascotController {
   init() {
     if (!this.container) return;
 
-    // Track mouse & touch movements across window
+    // Track magic wand / mouse & touch movements across window
     window.addEventListener('mousemove', (e) => this.handlePointerMove(e.clientX, e.clientY));
     window.addEventListener('touchmove', (e) => {
       if (e.touches && e.touches.length > 0) {
@@ -47,7 +57,7 @@ class MascotController {
       }
     }, { passive: true });
 
-    // Mascot main click interaction
+    // Mascot main body click
     this.container.addEventListener('pointerdown', (e) => this.handleMascotClick(e));
 
     // Ear wiggles
@@ -74,7 +84,7 @@ class MascotController {
         if (window.particleFX) {
           window.particleFX.burst(e.clientX, e.clientY, 'hearts', '#FF6584');
         }
-        this.say("Boop! 👃 You touched my nose! 🥰");
+        this.say("Boop! 👃 You touched my cute button nose! 🥰");
         this.wiggleEar('left');
         this.wiggleEar('right');
       });
@@ -119,6 +129,30 @@ class MascotController {
       });
     }
 
+    // Action Bar: Tickle Pip
+    if (this.tickleBtn) {
+      this.tickleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleMascotClick(e);
+      });
+    }
+
+    // Action Bar: Sing a Song
+    if (this.singBtn) {
+      this.singBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.singSong();
+      });
+    }
+
+    // Action Bar: Peek-a-boo!
+    if (this.peekBtn) {
+      this.peekBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.peekABoo();
+      });
+    }
+
     // Floating Interactive Bubbles popping
     document.querySelectorAll('.floating-bubble').forEach((bubble, idx) => {
       bubble.addEventListener('pointerdown', (e) => {
@@ -152,48 +186,65 @@ class MascotController {
   }
 
   handlePointerMove(x, y) {
-    if (!this.container) return;
-    if (this.isGiggling) return;
+    if (!this.head || !this.body) return;
+    if (this.isGiggling || this.isSinging) return;
 
-    // Center of the mascot on screen
-    const rect = this.container.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    // Center of the head on screen
+    const headRect = this.head.getBoundingClientRect();
+    const headCenterX = headRect.left + headRect.width / 2;
+    const headCenterY = headRect.top + headRect.height * 0.6;
 
-    // Calculate normalized offset from center (-1 to 1)
-    const normX = (x - centerX) / (window.innerWidth / 2);
-    const normY = (y - centerY) / (window.innerHeight / 2);
+    // Normalized offset from head center (-1 to +1)
+    const normX = Math.max(-1, Math.min(1, (x - headCenterX) / (window.innerWidth / 2.2)));
+    const normY = Math.max(-1, Math.min(1, (y - headCenterY) / (window.innerHeight / 2.2)));
 
-    // 3D Tilt: gentle rotational perspective lean towards pointer
-    const tiltDegY = Math.max(-12, Math.min(12, normX * 10));
-    const tiltDegX = Math.max(-10, Math.min(10, -normY * 8));
-    const tiltY = Math.max(-10, Math.min(10, normY * 6));
-    this.container.style.transform = `perspective(1000px) rotateY(${tiltDegY.toFixed(2)}deg) rotateX(${tiltDegX.toFixed(2)}deg) translateY(${tiltY.toFixed(2)}px)`;
+    // 1. FACE / HEAD 3D MOVEMENT:
+    // Face turns left/right (yaw): up to ±22°
+    const yaw = normX * 22;
+    // Face looks up/down (pitch): when wand is up (normY negative), face looks up
+    const pitch = -normY * 16;
+    // Cute baby head tilt (roll): up to ±7°
+    const roll = normX * 7;
+    // Subtle neck translation towards wand tip
+    const neckX = normX * 10;
+    const neckY = normY * 6;
 
-    // Pupil Eye Tracking with trigonometry
-    if (this.pupilLeft && this.pupilRight) {
-      this.trackEye(this.pupilLeft, 0.361 * rect.width, 0.317 * rect.height, x, y, rect);
-      this.trackEye(this.pupilRight, 0.552 * rect.width, 0.298 * rect.height, x, y, rect);
+    this.head.style.transform = `perspective(900px) translate3d(${neckX.toFixed(1)}px, ${neckY.toFixed(1)}px, 15px) rotateY(${yaw.toFixed(1)}deg) rotateX(${pitch.toFixed(1)}deg) rotateZ(${roll.toFixed(1)}deg)`;
+
+    // 2. BODY GENTLE SWAY:
+    // Torso leans subtly with baby weight (about 1/4th of head angle)
+    const bodyTilt = normX * 4.5;
+    const bodyX = normX * 5;
+    this.body.style.transform = `rotate(${bodyTilt.toFixed(1)}deg) translateX(${bodyX.toFixed(1)}px)`;
+
+    // 3. EYES PUPIL TRACKING:
+    // Pupils calculate direct trigonometry toward the magic stick tip
+    if (this.pupilLeft && this.eyeSocketLeft) {
+      this.trackEyeElement(this.pupilLeft, this.eyeSocketLeft, x, y);
+    }
+    if (this.pupilRight && this.eyeSocketRight) {
+      this.trackEyeElement(this.pupilRight, this.eyeSocketRight, x, y);
     }
   }
 
-  trackEye(pupilEl, eyeRelX, eyeRelY, targetX, targetY, mascotRect) {
-    const eyeGlobalX = mascotRect.left + eyeRelX;
-    const eyeGlobalY = mascotRect.top + eyeRelY;
+  trackEyeElement(pupilEl, socketEl, targetX, targetY) {
+    const rect = socketEl.getBoundingClientRect();
+    const eyeGlobalX = rect.left + rect.width / 2;
+    const eyeGlobalY = rect.top + rect.height / 2;
 
     const dx = targetX - eyeGlobalX;
     const dy = targetY - eyeGlobalY;
     const angle = Math.atan2(dy, dx);
     const distance = Math.hypot(dx, dy);
 
-    // Max travel distance for pupils inside eye sockets (pixels)
-    const maxDistance = 5;
-    const travel = Math.min(distance / 25, maxDistance);
+    // Max travel distance for pupils inside eye socket
+    const maxDistance = Math.min(rect.width * 0.26, 6);
+    const travel = Math.min(distance / 20, maxDistance);
 
     const pupilX = Math.cos(angle) * travel;
     const pupilY = Math.sin(angle) * travel;
 
-    pupilEl.style.transform = `translate(${pupilX.toFixed(2)}px, ${pupilY.toFixed(2)}px)`;
+    pupilEl.style.transform = `translate(${pupilX.toFixed(1)}px, ${pupilY.toFixed(1)}px)`;
   }
 
   scheduleNextBlink() {
@@ -206,10 +257,10 @@ class MascotController {
 
   blink() {
     if (this.isGiggling) return;
-    const eyelids = document.querySelectorAll('.eyelid');
-    eyelids.forEach(lid => lid.style.opacity = '1');
+    const eyelids = document.querySelectorAll('.pip-eyelid');
+    eyelids.forEach(lid => lid.classList.add('closed'));
     setTimeout(() => {
-      eyelids.forEach(lid => lid.style.opacity = '0');
+      eyelids.forEach(lid => lid.classList.remove('closed'));
     }, 160);
   }
 
@@ -217,7 +268,7 @@ class MascotController {
     window.babyAudio.playChime(side === 'left' ? 3 : 5, 0.9);
     const ear = side === 'left' ? this.earLeft : this.earRight;
     if (ear) {
-      ear.style.transform = side === 'left' ? 'scale(1.25) rotate(-18deg)' : 'scale(1.25) rotate(18deg)';
+      ear.style.transform = side === 'left' ? 'scale(1.25) rotate(-16deg)' : 'scale(1.25) rotate(16deg)';
       setTimeout(() => {
         ear.style.transform = '';
       }, 300);
@@ -226,14 +277,21 @@ class MascotController {
   }
 
   bounce() {
-    this.container.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    this.container.style.transform = 'perspective(1000px) scale(1.1) translateY(-24px)';
+    if (!this.head || !this.body) return;
+    this.head.style.transition = 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    this.body.style.transition = 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+    this.head.style.transform = 'perspective(900px) scale(1.08) translateY(-18px) rotate(3deg)';
+    this.body.style.transform = 'scale(1.05) translateY(-10px)';
+
     setTimeout(() => {
-      this.container.style.transform = '';
+      this.head.style.transform = '';
+      this.body.style.transform = '';
       setTimeout(() => {
-        this.container.style.transition = '';
+        this.head.style.transition = '';
+        this.body.style.transition = '';
       }, 200);
-    }, 350);
+    }, 380);
   }
 
   handleMascotClick(e) {
@@ -244,8 +302,10 @@ class MascotController {
     window.babyAudio.playGiggle();
 
     // Trigger heart particle burst at tap location
+    const clientX = e.clientX || window.innerWidth / 2;
+    const clientY = e.clientY || window.innerHeight / 2;
     if (window.particleFX) {
-      window.particleFX.burst(e.clientX, e.clientY, 'hearts');
+      window.particleFX.burst(clientX, clientY, 'hearts');
     }
 
     // Cute blush illumination
@@ -256,7 +316,7 @@ class MascotController {
       this.blushRight.style.transform = 'scale(1.4)';
     }
 
-    // Bounce mascot
+    // Bounce puppet
     this.bounce();
 
     // Random cute phrase
@@ -272,6 +332,67 @@ class MascotController {
       }
       this.isGiggling = false;
     }, 950);
+  }
+
+  singSong() {
+    if (this.isSinging) return;
+    this.isSinging = true;
+
+    this.say("Lullaby dreams! 🎵 Sing with me!");
+    if (window.particleFX) {
+      window.particleFX.burst(window.innerWidth / 2, window.innerHeight * 0.45, 'stars', '#FBBF24');
+    }
+
+    // Melodic notes sequence
+    const notes = [1, 3, 5, 6, 5, 3, 1];
+    notes.forEach((note, i) => {
+      setTimeout(() => {
+        window.babyAudio.playChime(note, 1.2);
+        // Head sways to the music
+        if (this.head) {
+          const sway = (i % 2 === 0 ? 8 : -8);
+          this.head.style.transform = `perspective(900px) rotateZ(${sway}deg) translateY(-8px)`;
+        }
+      }, i * 360);
+    });
+
+    setTimeout(() => {
+      if (this.head) this.head.style.transform = '';
+      this.isSinging = false;
+    }, notes.length * 360 + 400);
+  }
+
+  peekABoo() {
+    if (!this.head) return;
+    this.isGiggling = true;
+
+    // Cover eyes / duck down
+    const eyelids = document.querySelectorAll('.pip-eyelid');
+    eyelids.forEach(lid => lid.classList.add('closed'));
+    this.head.style.transition = 'transform 0.3s ease-in';
+    this.head.style.transform = 'perspective(900px) translateY(40px) scale(0.92)';
+    this.say("Where is Pip? 🙈");
+
+    setTimeout(() => {
+      // Pop up with big smile!
+      window.babyAudio.playPop();
+      window.babyAudio.playChime(5, 1.5);
+      eyelids.forEach(lid => lid.classList.remove('closed'));
+
+      this.head.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      this.head.style.transform = 'perspective(900px) translateY(-22px) scale(1.12)';
+      this.say("PEEK-A-BOO! 🥰 Here I am!");
+
+      if (window.particleFX) {
+        window.particleFX.burst(window.innerWidth / 2, window.innerHeight * 0.4, 'sparkles', '#EC4899');
+      }
+
+      setTimeout(() => {
+        this.head.style.transform = '';
+        this.head.style.transition = '';
+        this.isGiggling = false;
+      }, 900);
+    }, 900);
   }
 
   say(text) {

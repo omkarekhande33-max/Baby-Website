@@ -98,50 +98,68 @@
         <!-- Mascot Speech Bubble -->
         <div class="mascot-speech-bubble" id="mascot-speech">Hi little friend! 🐻✨</div>
 
-        <!-- The Big 3D Teddy Bear Hero Character -->
-        <div class="mascot-container big-teddy-container" id="mascot-container" title="Click or tap Pip to make him giggle!">
-          <div class="big-teddy-frame">
-            <!-- Full-Resolution 3D Pixar Teddy Bear -->
-            <img src="assets/mascot.jpg" alt="Pip the Big Wonder Bear" class="big-teddy-img" draggable="false"/>
+        <!-- Soft Nursery Playmat Ground Shadow -->
+        <div class="pip-playmat-shadow"></div>
 
-            <!-- Soft Volumetric Rim Lighting -->
-            <div class="teddy-rim-light"></div>
+        <!-- The Dynamic 3D Rigged Teddy Bear Character (Moves Face, Eyes & Body to Magic Stick) -->
+        <div class="pip-puppet-container" id="mascot-container" title="Wave your magic stick or tap Pip!">
+          
+          <!-- Body Layer (Denim Overalls, Honey Pot, Sitting Legs & Paws - Breathes & Sway) -->
+          <div class="pip-body-layer" id="pip-body">
+            <img src="assets/pip_body.png" alt="Pip Body and Overalls" class="pip-body-img" draggable="false"/>
 
-            <!-- Interactive Eye Tracking Overlays -->
-            <div class="teddy-eye-socket eye-socket-left">
-              <div class="teddy-pupil" id="pupil-left">
-                <span class="pupil-glint"></span>
-                <span class="pupil-sparkle">★</span>
-              </div>
-              <div class="teddy-eyelid eyelid" id="eyelid-left"></div>
+            <!-- Overalls Honey Pot Hotspot -->
+            <div class="hotspot hotspot-honey" id="mascot-honey" title="Tickle my honey pot! 🍯">
+              <span class="honey-glow"></span>
+              <span class="honey-badge">🍯</span>
             </div>
 
-            <div class="teddy-eye-socket eye-socket-right">
-              <div class="teddy-pupil" id="pupil-right">
-                <span class="pupil-glint"></span>
-                <span class="pupil-sparkle">★</span>
+            <!-- High Five Paws -->
+            <div class="hotspot hotspot-paw-left" id="mascot-paw-left" title="High five Pip! 🐾"></div>
+            <div class="hotspot hotspot-paw-right" id="mascot-paw-right" title="High five Pip! 🐾"></div>
+          </div>
+
+          <!-- Head / Face Layer (Turns 3D Yaw, Pitch, Roll & Leans Towards Magic Stick) -->
+          <div class="pip-head-layer" id="pip-head">
+            
+            <!-- Dynamic Eye Sockets Behind Head Fur Cutouts -->
+            <div class="pip-eye-socket eye-socket-left" id="eye-socket-left">
+              <div class="pip-sclera">
+                <div class="pip-iris-pupil" id="pupil-left">
+                  <div class="pip-pupil-center"></div>
+                  <div class="pip-glint-main"></div>
+                  <div class="pip-glint-sub">★</div>
+                </div>
+                <div class="pip-eyelid eyelid" id="eyelid-left"></div>
               </div>
-              <div class="teddy-eyelid eyelid" id="eyelid-right"></div>
             </div>
+
+            <div class="pip-eye-socket eye-socket-right" id="eye-socket-right">
+              <div class="pip-sclera">
+                <div class="pip-iris-pupil" id="pupil-right">
+                  <div class="pip-pupil-center"></div>
+                  <div class="pip-glint-main"></div>
+                  <div class="pip-glint-sub">★</div>
+                </div>
+                <div class="pip-eyelid eyelid" id="eyelid-right"></div>
+              </div>
+            </div>
+
+            <!-- Head Fur & Face Image with Cutout Eye Apertures -->
+            <img src="assets/pip_head.png" alt="Pip Head and Face" class="pip-head-img" draggable="false"/>
 
             <!-- Blushing Cheeks -->
             <div class="teddy-blush blush-left" id="blush-left">♥</div>
             <div class="teddy-blush blush-right" id="blush-right">♥</div>
 
-            <!-- Interactive Clickable Hotspots -->
+            <!-- Boopable Button Nose Hotspot -->
             <div class="hotspot hotspot-nose" id="mascot-nose" title="Boop my nose! 👃">
               <span class="hotspot-pulse"></span>
             </div>
 
+            <!-- Ear Hotspots -->
             <div class="hotspot hotspot-ear-left" id="ear-left" title="Wiggle my left ear! 🐰"></div>
             <div class="hotspot hotspot-ear-right" id="ear-right" title="Wiggle my right ear! 🐰"></div>
-
-            <div class="hotspot hotspot-honey" id="mascot-honey" title="Tickle my honey pot! 🍯">
-              <span class="honey-glow"></span>
-            </div>
-
-            <div class="hotspot hotspot-paw-left" id="mascot-paw-left" title="High five Pip! 🐾"></div>
-            <div class="hotspot hotspot-paw-right" id="mascot-paw-right" title="High five Pip! 🐾"></div>
           </div>
         </div>
 
