@@ -1,7 +1,149 @@
 /**
  * Baby WonderLand - Interactive Mascot Controller ("Pip the 3D Wonder Bear")
  * Rigged Puppet: Face (Head), Eyes, and Body move smoothly according to the magic stick.
+ * Action Bar: Plays trimmed CoComelon nursery rhymes (Wheels on the Bus, Baby Shark, Baa Baa Black Sheep)
+ * with play/stop toggle behavior and dancing bear animations.
  */
+
+class SongPlayer {
+  constructor(mascot) {
+    this.mascot = mascot;
+    this.audio = new Audio();
+    this.currentSongId = null;
+    this.isPlaying = false;
+    this.danceInterval = null;
+
+    this.songs = {
+      wheels_on_the_bus: {
+        title: "Wheels on the Bus",
+        icon: "🚌",
+        src: "assets/audio/wheels_on_the_bus.mp3",
+        phrase: "The wheels on the bus go round and round! 🚌🎶"
+      },
+      baby_shark: {
+        title: "Baby Shark",
+        icon: "🦈",
+        src: "assets/audio/baby_shark.mp3",
+        phrase: "Baby Shark, doo doo doo doo doo doo! 🦈🌊"
+      },
+      baa_baa_black_sheep: {
+        title: "Baa Baa Black Sheep",
+        icon: "🐑",
+        src: "assets/audio/baa_baa_black_sheep.mp3",
+        phrase: "Baa baa black sheep, have you any wool? 🐑✨"
+      }
+    };
+
+    this.audio.addEventListener('ended', () => {
+      this.stop();
+    });
+
+    this.audio.addEventListener('error', (e) => {
+      console.warn('Audio playback notice:', e);
+      this.stop();
+    });
+  }
+
+  toggle(songId) {
+    if (this.isPlaying && this.currentSongId === songId) {
+      // If song is playing and user clicks button -> stop it!
+      this.stop();
+    } else {
+      // Play selected song!
+      this.play(songId);
+    }
+  }
+
+  play(songId) {
+    const song = this.songs[songId];
+    if (!song) return;
+
+    // Stop any existing playback
+    this.audio.pause();
+    this.audio.currentTime = 0;
+
+    this.currentSongId = songId;
+    this.isPlaying = true;
+    this.audio.src = song.src;
+
+    const playPromise = this.audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.warn('Playback gesture note:', err);
+      });
+    }
+
+    // Trigger visual feedback
+    this.updateButtons();
+    this.mascot.say(`${song.icon} Now Playing: ${song.title}! 🎶`);
+    this.startDancing();
+
+    if (window.particleFX) {
+      window.particleFX.burst(window.innerWidth / 2, window.innerHeight * 0.45, 'stars', '#FBBF24');
+    }
+  }
+
+  stop() {
+    this.audio.pause();
+    this.audio.currentTime = 0;
+    const stoppedSong = this.songs[this.currentSongId];
+    this.isPlaying = false;
+    this.currentSongId = null;
+
+    this.updateButtons();
+    this.stopDancing();
+
+    if (stoppedSong) {
+      this.mascot.say(`Music paused! 🎵 Tap any song to play!`);
+    }
+  }
+
+  updateButtons() {
+    ['wheels_on_the_bus', 'baby_shark', 'baa_baa_black_sheep'].forEach(id => {
+      const btn = document.querySelector(`[data-song="${id}"]`);
+      if (!btn) return;
+      const badge = btn.querySelector('.song-state-badge');
+      if (this.isPlaying && this.currentSongId === id) {
+        btn.classList.add('is-playing');
+        if (badge) badge.textContent = '⏹ Stop';
+      } else {
+        btn.classList.remove('is-playing');
+        if (badge) badge.textContent = '▶';
+      }
+    });
+  }
+
+  startDancing() {
+    this.stopDancing();
+    let beat = 0;
+    this.danceInterval = setInterval(() => {
+      if (!this.isPlaying) return;
+      beat++;
+      const sway = (beat % 2 === 0 ? 7 : -7);
+      if (this.mascot.head) {
+        this.mascot.head.style.transform = `perspective(900px) rotateZ(${sway}deg) translateY(-8px)`;
+      }
+      if (this.mascot.body) {
+        this.mascot.body.style.transform = `rotate(${(-sway * 0.45).toFixed(1)}deg)`;
+      }
+      // Floating starlight notes during dance
+      if (beat % 3 === 0 && window.particleFX) {
+        const x = window.innerWidth / 2 + (Math.random() - 0.5) * 220;
+        const y = window.innerHeight * 0.42 + (Math.random() - 0.5) * 80;
+        window.particleFX.burst(x, y, 'stars', '#FDE047');
+      }
+    }, 420);
+  }
+
+  stopDancing() {
+    if (this.danceInterval) {
+      clearInterval(this.danceInterval);
+      this.danceInterval = null;
+    }
+    if (this.mascot.head) this.mascot.head.style.transform = '';
+    if (this.mascot.body) this.mascot.body.style.transform = '';
+  }
+}
 
 class MascotController {
   constructor() {
@@ -22,15 +164,12 @@ class MascotController {
     this.pawRight = document.getElementById('mascot-paw-right');
     this.speechBubble = document.getElementById('mascot-speech');
 
-    // Action bar buttons
-    this.tickleBtn = document.getElementById('mascot-tickle-btn');
-    this.singBtn = document.getElementById('mascot-sing-btn');
-    this.peekBtn = document.getElementById('mascot-peek-btn');
-
     this.speechTimer = null;
     this.blinkTimer = null;
     this.isGiggling = false;
-    this.isSinging = false;
+
+    // Song Player instance
+    this.songPlayer = new SongPlayer(this);
 
     this.phrases = [
       "Peek-a-boo! 🥰",
@@ -40,7 +179,7 @@ class MascotController {
       "Boop my nose! 👃",
       "Tickle my honey pot! 🍯",
       "You're so magical! 🪄",
-      "Yay, let's play! 🎈"
+      "Let's sing nursery rhymes! 🎶"
     ];
 
     this.init();
@@ -129,29 +268,16 @@ class MascotController {
       });
     }
 
-    // Action Bar: Tickle Pip
-    if (this.tickleBtn) {
-      this.tickleBtn.addEventListener('click', (e) => {
+    // Action Bar: 3 Song Buttons
+    document.querySelectorAll('.song-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.handleMascotClick(e);
+        const songId = btn.getAttribute('data-song');
+        if (songId) {
+          this.songPlayer.toggle(songId);
+        }
       });
-    }
-
-    // Action Bar: Sing a Song
-    if (this.singBtn) {
-      this.singBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.singSong();
-      });
-    }
-
-    // Action Bar: Peek-a-boo!
-    if (this.peekBtn) {
-      this.peekBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.peekABoo();
-      });
-    }
+    });
 
     // Floating Interactive Bubbles popping
     document.querySelectorAll('.floating-bubble').forEach((bubble, idx) => {
@@ -187,7 +313,9 @@ class MascotController {
 
   handlePointerMove(x, y) {
     if (!this.head || !this.body) return;
-    if (this.isGiggling || this.isSinging) return;
+    if (this.isGiggling) return;
+    // When singing/dancing, only face yaw & pitch react gently
+    const isDancing = this.songPlayer && this.songPlayer.isPlaying;
 
     // Center of the head on screen
     const headRect = this.head.getBoundingClientRect();
@@ -199,26 +327,22 @@ class MascotController {
     const normY = Math.max(-1, Math.min(1, (y - headCenterY) / (window.innerHeight / 2.2)));
 
     // 1. FACE / HEAD 3D MOVEMENT:
-    // Face turns left/right (yaw): up to ±22°
-    const yaw = normX * 22;
-    // Face looks up/down (pitch): when wand is up (normY negative), face looks up
-    const pitch = -normY * 16;
-    // Cute baby head tilt (roll): up to ±7°
-    const roll = normX * 7;
-    // Subtle neck translation towards wand tip
-    const neckX = normX * 10;
-    const neckY = normY * 6;
+    const yaw = normX * (isDancing ? 12 : 22);
+    const pitch = -normY * (isDancing ? 10 : 16);
+    const roll = normX * (isDancing ? 4 : 7);
+    const neckX = normX * (isDancing ? 6 : 10);
+    const neckY = normY * (isDancing ? 4 : 6);
 
-    this.head.style.transform = `perspective(900px) translate3d(${neckX.toFixed(1)}px, ${neckY.toFixed(1)}px, 15px) rotateY(${yaw.toFixed(1)}deg) rotateX(${pitch.toFixed(1)}deg) rotateZ(${roll.toFixed(1)}deg)`;
+    if (!isDancing) {
+      this.head.style.transform = `perspective(900px) translate3d(${neckX.toFixed(1)}px, ${neckY.toFixed(1)}px, 15px) rotateY(${yaw.toFixed(1)}deg) rotateX(${pitch.toFixed(1)}deg) rotateZ(${roll.toFixed(1)}deg)`;
 
-    // 2. BODY GENTLE SWAY:
-    // Torso leans subtly with baby weight (about 1/4th of head angle)
-    const bodyTilt = normX * 4.5;
-    const bodyX = normX * 5;
-    this.body.style.transform = `rotate(${bodyTilt.toFixed(1)}deg) translateX(${bodyX.toFixed(1)}px)`;
+      // 2. BODY GENTLE SWAY:
+      const bodyTilt = normX * 4.5;
+      const bodyX = normX * 5;
+      this.body.style.transform = `rotate(${bodyTilt.toFixed(1)}deg) translateX(${bodyX.toFixed(1)}px)`;
+    }
 
     // 3. EYES PUPIL TRACKING:
-    // Pupils calculate direct trigonometry toward the magic stick tip
     if (this.pupilLeft && this.eyeSocketLeft) {
       this.trackEyeElement(this.pupilLeft, this.eyeSocketLeft, x, y);
     }
@@ -334,67 +458,6 @@ class MascotController {
     }, 950);
   }
 
-  singSong() {
-    if (this.isSinging) return;
-    this.isSinging = true;
-
-    this.say("Lullaby dreams! 🎵 Sing with me!");
-    if (window.particleFX) {
-      window.particleFX.burst(window.innerWidth / 2, window.innerHeight * 0.45, 'stars', '#FBBF24');
-    }
-
-    // Melodic notes sequence
-    const notes = [1, 3, 5, 6, 5, 3, 1];
-    notes.forEach((note, i) => {
-      setTimeout(() => {
-        window.babyAudio.playChime(note, 1.2);
-        // Head sways to the music
-        if (this.head) {
-          const sway = (i % 2 === 0 ? 8 : -8);
-          this.head.style.transform = `perspective(900px) rotateZ(${sway}deg) translateY(-8px)`;
-        }
-      }, i * 360);
-    });
-
-    setTimeout(() => {
-      if (this.head) this.head.style.transform = '';
-      this.isSinging = false;
-    }, notes.length * 360 + 400);
-  }
-
-  peekABoo() {
-    if (!this.head) return;
-    this.isGiggling = true;
-
-    // Cover eyes / duck down
-    const eyelids = document.querySelectorAll('.pip-eyelid');
-    eyelids.forEach(lid => lid.classList.add('closed'));
-    this.head.style.transition = 'transform 0.3s ease-in';
-    this.head.style.transform = 'perspective(900px) translateY(40px) scale(0.92)';
-    this.say("Where is Pip? 🙈");
-
-    setTimeout(() => {
-      // Pop up with big smile!
-      window.babyAudio.playPop();
-      window.babyAudio.playChime(5, 1.5);
-      eyelids.forEach(lid => lid.classList.remove('closed'));
-
-      this.head.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
-      this.head.style.transform = 'perspective(900px) translateY(-22px) scale(1.12)';
-      this.say("PEEK-A-BOO! 🥰 Here I am!");
-
-      if (window.particleFX) {
-        window.particleFX.burst(window.innerWidth / 2, window.innerHeight * 0.4, 'sparkles', '#EC4899');
-      }
-
-      setTimeout(() => {
-        this.head.style.transform = '';
-        this.head.style.transition = '';
-        this.isGiggling = false;
-      }, 900);
-    }, 900);
-  }
-
   say(text) {
     if (!this.speechBubble) return;
     this.speechBubble.textContent = text;
@@ -403,7 +466,7 @@ class MascotController {
     if (this.speechTimer) clearTimeout(this.speechTimer);
     this.speechTimer = setTimeout(() => {
       this.speechBubble.classList.remove('visible');
-    }, 2400);
+    }, 2800);
   }
 }
 
