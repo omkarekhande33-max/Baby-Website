@@ -62,6 +62,29 @@ class MascotController {
       });
     }
 
+    const nose = document.getElementById('mascot-nose');
+    if (nose) {
+      nose.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        window.babyAudio.playPop();
+        window.babyAudio.playChime(4, 1.4);
+        window.particleFX.burst(e.clientX, e.clientY, 'hearts', '#FF6584');
+        this.say("Boop! 👃 You touched my nose! 🥰");
+        this.wiggleEar('left');
+        this.wiggleEar('right');
+      });
+    }
+
+    const pom = document.querySelector('.nightcap-pom');
+    if (pom) {
+      pom.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        window.babyAudio.playPop();
+        window.particleFX.burst(e.clientX, e.clientY, 'stars', '#818CF8');
+        this.say("My cozy nightcap! 🌙 Bedtime starry dreams!");
+      });
+    }
+
     // Start natural blinking routine
     this.scheduleNextBlink();
   }

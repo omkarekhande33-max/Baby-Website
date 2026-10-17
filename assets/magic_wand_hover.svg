@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <defs>
+    <!-- Wand Stem Rainbow Gradient -->
+    <linearGradient id="wandHandleHover" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="30%" stop-color="#FF6584"/>
+      <stop offset="65%" stop-color="#FFD166"/>
+      <stop offset="100%" stop-color="#06D6A0"/>
+    </linearGradient>
+    <!-- Vibrant Star Gradient -->
+    <radialGradient id="starGradHover" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="40%" stop-color="#FFF59D"/>
+      <stop offset="80%" stop-color="#FF9E00"/>
+      <stop offset="100%" stop-color="#FF3D00"/>
+    </radialGradient>
+    <!-- Magical Aura Filter -->
+    <filter id="auraGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#auraGlow)">
+    <!-- Magic Aura Outer Glow -->
+    <line x1="13" y1="13" x2="42" y2="42" stroke="#FF7597" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+    <line x1="13" y1="13" x2="42" y2="42" stroke="#331442" stroke-width="6" stroke-linecap="round"/>
+    <line x1="13" y1="13" x2="42" y2="42" stroke="url(#wandHandleHover)" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Wand Spiral Ribbon -->
+    <path d="M 17 17 Q 21 16 22 21 T 29 29 T 37 37" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity="0.95"/>
+
+    <!-- Radiant Magic Star Tip (Hotspot at 10, 1) -->
+    <polygon points="10,1 13.5,7 20,8 15,13.5 16.5,20 10,16.5 3.5,20 5,13.5 0,8 6.5,7" fill="url(#starGradHover)" stroke="#FFD600" stroke-width="1.2"/>
+
+    <!-- Sparkle Highlights -->
+    <circle cx="10" cy="10" r="2.8" fill="#FFFFFF"/>
+    <circle cx="23" cy="2" r="1.6" fill="#FFF"/>
+    <circle cx="0" cy="22" r="1.4" fill="#00E5FF"/>
+    <circle cx="25" cy="16" r="1.3" fill="#FF4081"/>
+    <circle cx="15" cy="26" r="1.1" fill="#76FF03"/>
+  </g>
+</svg>

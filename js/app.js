@@ -50,9 +50,34 @@ class ParticleFXEngine {
         alpha: 1,
         life: 1,
         decay: Math.random() * 0.02 + 0.015,
-        type: type, // 'sparkles', 'stars', 'hearts', 'confetti'
+        type: type, // 'sparkles', 'stars', 'hearts', 'confetti', 'stardust'
         rot: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.15
+      });
+    }
+  }
+
+  spawnStardust(x, y, dx, dy) {
+    // Keep high performance: max 80 particles
+    if (this.particles.length > 80) return;
+
+    const colors = ['#FFF59D', '#FFD166', '#FF80AB', '#80D8FF', '#B388FF', '#A7FFEB', '#FFFFFF'];
+    const count = Math.random() < 0.6 ? 2 : 1;
+
+    for (let i = 0; i < count; i++) {
+      this.particles.push({
+        x: x + (Math.random() - 0.5) * 10,
+        y: y + (Math.random() - 0.5) * 10,
+        vx: -dx * 0.08 + (Math.random() - 0.5) * 1.6,
+        vy: -dy * 0.08 + (Math.random() - 0.5) * 1.6 - 0.4, // Gentle float upward
+        size: Math.random() * 4.5 + 2.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 1,
+        life: 1,
+        decay: Math.random() * 0.035 + 0.022,
+        type: 'stardust',
+        rot: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.25
       });
     }
   }
@@ -75,6 +100,10 @@ class ParticleFXEngine {
         p.vy += 0.12; // Gentle gravity
       } else if (p.type === 'hearts') {
         p.vy -= 0.05; // Float upwards
+      } else if (p.type === 'stardust') {
+        p.vx *= 0.94;
+        p.vy *= 0.94;
+        p.vy -= 0.06; // Fairy float upward
       }
 
       p.life -= p.decay;
@@ -119,6 +148,20 @@ class ParticleFXEngine {
       } else if (p.type === 'confetti') {
         this.ctx.fillStyle = p.color;
         this.ctx.fillRect(-p.size / 2, -p.size, p.size, p.size * 1.5);
+      } else if (p.type === 'stardust') {
+        // Glowing Fairy Stardust Diamond Star
+        this.ctx.fillStyle = p.color;
+        this.ctx.shadowBlur = 8;
+        this.ctx.shadowColor = p.color;
+        const s = p.size;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -s);
+        this.ctx.quadraticCurveTo(0, 0, s, 0);
+        this.ctx.quadraticCurveTo(0, 0, 0, s);
+        this.ctx.quadraticCurveTo(0, 0, -s, 0);
+        this.ctx.quadraticCurveTo(0, 0, 0, -s);
+        this.ctx.closePath();
+        this.ctx.fill();
       } else {
         // Glowing Sparkles
         this.ctx.fillStyle = p.color;
@@ -156,9 +199,41 @@ class AppCoordinator {
     this.paint = new window.FingerPaintsEngine();
     this.trike = new window.LightningTrikeGame();
     this.robot = new window.ToyRobotCompanion();
+    if (window.BedroomController) {
+      this.bedroom = new window.BedroomController();
+    }
     if (window.BabyGalleryManager) {
       this.gallery = new window.BabyGalleryManager();
     }
+
+    // Magic Wand Stardust Trail Engine
+    let lastWandX = null;
+    let lastWandY = null;
+    let wandThrottle = 0;
+
+    const handleWandMove = (clientX, clientY) => {
+      const now = performance.now();
+      if (now - wandThrottle < 18) return;
+      wandThrottle = now;
+
+      if (lastWandX !== null) {
+        const dx = clientX - lastWandX;
+        const dy = clientY - lastWandY;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 2) {
+          window.particleFX.spawnStardust(clientX, clientY, dx, dy);
+        }
+      }
+      lastWandX = clientX;
+      lastWandY = clientY;
+    };
+
+    window.addEventListener('mousemove', (e) => handleWandMove(e.clientX, e.clientY));
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        handleWandMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
 
     // 3. Navigation Tabs
     const tabBtns = document.querySelectorAll('.nav-tab-btn');
