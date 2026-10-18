@@ -16,13 +16,14 @@ class LightningTrikeGame {
     this.isRunning = false;
     this.animId = null;
 
-    // Game State & Speeds
+    // Game State & Speeds (Normalized with Delta-Time for buttery 60-120fps)
     this.score = 0;
-    this.baseSpeed = 5.2; // Energetic, smooth cruising speed
-    this.speed = 5.2;
+    this.baseSpeed = 6.4; // Crisp, energetic cruising speed
+    this.speed = 6.4;
     this.boostTimer = 0; // Lightning turbo button
     this.starBoostTimer = 0; // Star Dash Boost when touching stars!
     this.distance = 0;
+    this.lastTime = 0;
 
     // Trike Physics & 3D Character State
     this.trike = {
@@ -164,7 +165,7 @@ class LightningTrikeGame {
     this.isRunning = true;
     this.resizeCanvas();
     this.lastTime = performance.now();
-    this.loop();
+    this.animId = requestAnimationFrame((t) => this.loop(t));
   }
 
   stop() {
@@ -181,7 +182,9 @@ class LightningTrikeGame {
   resizeCanvas() {
     const parent = this.canvas.parentElement;
     if (!parent) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap at 2 for blazing 60-120fps performance
+    const isMobile = window.innerWidth <= 768;
+    // Cap DPR to 1.0 on mobile to cut 75% GPU raster load, ensuring 60-120 FPS
+    const dpr = isMobile ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.5);
     this.width = parent.clientWidth;
     this.height = parent.clientHeight;
     this.canvas.width = Math.floor(this.width * dpr);
@@ -191,9 +194,78 @@ class LightningTrikeGame {
 
     this.groundY = this.height - 115;
     this.trike.groundY = this.groundY;
+    this.trike.x = isMobile ? Math.min(100, this.width * 0.28) : 180;
     if (this.trike.isGrounded) {
       this.trike.y = this.groundY;
     }
+
+    this.initCachedGradients();
+  }
+
+  initCachedGradients() {
+    if (!this.ctx || this.height <= 0) return;
+
+    // Day Sky
+    this.skyGradDay = this.ctx.createLinearGradient(0, 0, 0, this.height);
+    this.skyGradDay.addColorStop(0, '#7DD3FC');
+    this.skyGradDay.addColorStop(0.5, '#BAE6FD');
+    this.skyGradDay.addColorStop(0.85, '#E0F2FE');
+    this.skyGradDay.addColorStop(1, '#FEF9C3');
+
+    // Night Sky
+    this.skyGradNight = this.ctx.createLinearGradient(0, 0, 0, this.height);
+    this.skyGradNight.addColorStop(0, '#0F172A');
+    this.skyGradNight.addColorStop(0.55, '#1E1B4B');
+    this.skyGradNight.addColorStop(1, '#312E81');
+
+    // Layer 1 Hills
+    this.hill1Day = this.ctx.createLinearGradient(0, this.height - 240, 0, this.height);
+    this.hill1Day.addColorStop(0, '#C7D2FE');
+    this.hill1Day.addColorStop(0.6, '#A5B4FC');
+    this.hill1Day.addColorStop(1, '#818CF8');
+
+    this.hill1Night = this.ctx.createLinearGradient(0, this.height - 240, 0, this.height);
+    this.hill1Night.addColorStop(0, '#312E81');
+    this.hill1Night.addColorStop(1, '#1E1B4B');
+
+    // Layer 2 Hills
+    this.hill2Day = this.ctx.createLinearGradient(0, this.height - 180, 0, this.height);
+    this.hill2Day.addColorStop(0, '#A7F3D0');
+    this.hill2Day.addColorStop(0.5, '#6EE7B7');
+    this.hill2Day.addColorStop(1, '#34D399');
+
+    this.hill2Night = this.ctx.createLinearGradient(0, this.height - 180, 0, this.height);
+    this.hill2Night.addColorStop(0, '#065F46');
+    this.hill2Night.addColorStop(1, '#022C22');
+
+    // Layer 3 Hills
+    this.hill3Day = this.ctx.createLinearGradient(0, this.height - 130, 0, this.height);
+    this.hill3Day.addColorStop(0, '#4ADE80');
+    this.hill3Day.addColorStop(0.4, '#22C55E');
+    this.hill3Day.addColorStop(1, '#16A34A');
+
+    this.hill3Night = this.ctx.createLinearGradient(0, this.height - 130, 0, this.height);
+    this.hill3Night.addColorStop(0, '#047857');
+    this.hill3Night.addColorStop(1, '#064E3B');
+
+    // Grassy bank
+    this.grassDay = this.ctx.createLinearGradient(0, this.groundY, 0, this.height);
+    this.grassDay.addColorStop(0, '#10B981');
+    this.grassDay.addColorStop(0.4, '#059669');
+    this.grassDay.addColorStop(1, '#047857');
+
+    this.grassNight = this.ctx.createLinearGradient(0, this.groundY, 0, this.height);
+    this.grassNight.addColorStop(0, '#064E3B');
+    this.grassNight.addColorStop(1, '#022C22');
+
+    // Road Sheen
+    const roadY = this.groundY + 12;
+    const roadHeight = 22;
+    this.roadSheenGrad = this.ctx.createLinearGradient(0, roadY, 0, roadY + roadHeight);
+    this.roadSheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    this.roadSheenGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.15)');
+    this.roadSheenGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.05)');
+    this.roadSheenGrad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
   }
 
   jump() {
@@ -206,21 +278,22 @@ class LightningTrikeGame {
       window.babyAudio.playJump();
     }
 
-    // Burst 3D dust puffs & star sparkles at takeoff point
-    for (let i = 0; i < 8; i++) {
+    const isMobile = window.innerWidth <= 768;
+    const dustCount = isMobile ? 4 : 8;
+    for (let i = 0; i < dustCount; i++) {
       this.particles.push({
         x: this.trike.x - 20 + (Math.random() - 0.5) * 20,
         y: this.groundY + 8,
         vx: -(this.speed * 0.4 + Math.random() * 3),
         vy: (Math.random() - 0.5) * 1.5,
-        size: Math.random() * 8 + 6,
+        size: Math.random() * 7 + 5,
         life: 1.0,
         color: '#BAE6FD',
         type: 'dust'
       });
     }
 
-    if (window.particleFX) {
+    if (!isMobile && window.particleFX) {
       window.particleFX.burst(this.trike.x, this.trike.y - 20, 'sparkles', '#38BDF8');
     }
   }
@@ -231,8 +304,9 @@ class LightningTrikeGame {
     }
     this.bellRinging = 15;
 
-    // Golden sound wave ripples from the brass bell
-    for (let i = 0; i < 5; i++) {
+    const isMobile = window.innerWidth <= 768;
+    const noteCount = isMobile ? 3 : 5;
+    for (let i = 0; i < noteCount; i++) {
       this.particles.push({
         x: this.trike.x + 36,
         y: this.trike.y - 48,
@@ -245,7 +319,7 @@ class LightningTrikeGame {
       });
     }
 
-    if (window.particleFX) {
+    if (!isMobile && window.particleFX) {
       window.particleFX.burst(this.trike.x + 36, this.trike.y - 48, 'stars', '#F59E0B');
     }
   }
@@ -254,56 +328,57 @@ class LightningTrikeGame {
     if (window.babyAudio) {
       window.babyAudio.playArpeggio(4, 5, 55);
     }
-    // High-speed supersonic dash!
-    this.speed = this.baseSpeed * 2.3;
+    this.speed = this.baseSpeed * 2.2;
     this.boostTimer = 180; // ~3 seconds of boost
 
-    // Spawn turbo shockwave burst
-    for (let i = 0; i < 18; i++) {
+    const isMobile = window.innerWidth <= 768;
+    const count = isMobile ? 8 : 18;
+    for (let i = 0; i < count; i++) {
       this.particles.push({
         x: this.trike.x - 30,
         y: this.trike.y - 15 + (Math.random() - 0.5) * 20,
         vx: -(Math.random() * 9 + 4),
         vy: (Math.random() - 0.5) * 4,
-        size: Math.random() * 10 + 6,
+        size: Math.random() * 8 + 5,
         life: 1.0,
         color: Math.random() > 0.5 ? '#F43F5E' : '#38BDF8',
         type: 'spark'
       });
     }
 
-    if (window.particleFX) {
+    if (!isMobile && window.particleFX) {
       window.particleFX.burst(this.trike.x, this.trike.y, 'confetti');
     }
   }
 
-  update() {
+  update(dt = 1.0) {
     // -------------------------------------------------------------
     // SPEED LOGIC: Star Dash Acceleration & Lightning Turbo Boost
     // -------------------------------------------------------------
-    // If Lightning Turbo is active, it takes priority
     if (this.boostTimer > 0) {
-      this.boostTimer--;
-      if (this.boostTimer === 0) {
+      this.boostTimer -= dt;
+      if (this.boostTimer <= 0) {
+        this.boostTimer = 0;
         this.speed = this.starBoostTimer > 0 
-          ? this.baseSpeed + (3.0 * (this.starBoostTimer / 45)) 
+          ? this.baseSpeed + (3.4 * (this.starBoostTimer / 48)) 
           : this.baseSpeed;
       }
     } else if (this.starBoostTimer > 0) {
       // Star Dash Boost: smoothly decays back to base speed
-      this.starBoostTimer--;
-      const boostCurve = Math.pow(this.starBoostTimer / 45, 0.7);
-      this.speed = this.baseSpeed + (3.2 * boostCurve);
+      this.starBoostTimer -= dt;
+      if (this.starBoostTimer <= 0) this.starBoostTimer = 0;
+      const boostCurve = Math.pow(Math.max(0, this.starBoostTimer / 48), 0.7);
+      this.speed = this.baseSpeed + (3.4 * boostCurve);
     } else {
       // Normal cruising speed
       this.speed = this.baseSpeed;
     }
 
-    this.distance += this.speed;
+    this.distance += this.speed * dt;
 
     // Trike Vertical Physics (Jump & Gravity)
-    this.trike.y += this.trike.vy;
-    this.trike.vy += this.trike.gravity;
+    this.trike.y += this.trike.vy * dt;
+    this.trike.vy += this.trike.gravity * dt;
 
     if (this.trike.y >= this.trike.groundY) {
       if (!this.trike.isGrounded) {
@@ -316,38 +391,40 @@ class LightningTrikeGame {
     }
 
     // Wheel, pedal & character micro-animations
-    this.trike.wheelAngle += this.speed * 0.085;
-    this.trike.pedalAngle += this.speed * 0.085;
-    this.trike.bobAngle += 0.14;
-    this.trike.capeWave += 0.22 + (this.speed * 0.03);
-    this.trike.earFlex *= 0.88; // Damping spring
+    this.trike.wheelAngle += this.speed * 0.085 * dt;
+    this.trike.pedalAngle += this.speed * 0.085 * dt;
+    this.trike.bobAngle += 0.14 * dt;
+    this.trike.capeWave += (0.22 + (this.speed * 0.03)) * dt;
+    this.trike.earFlex *= Math.pow(0.88, dt); // Damping spring
 
-    if (this.bellRinging > 0) this.bellRinging--;
+    if (this.bellRinging > 0) this.bellRinging = Math.max(0, this.bellRinging - dt);
 
     // Parallax Hills Layers
-    this.hillsLayer1 = (this.hillsLayer1 + this.speed * 0.2) % (this.width + 400);
-    this.hillsLayer2 = (this.hillsLayer2 + this.speed * 0.45) % (this.width + 400);
-    this.hillsLayer3 = (this.hillsLayer3 + this.speed * 0.85) % (this.width + 400);
+    this.hillsLayer1 = (this.hillsLayer1 + this.speed * 0.2 * dt) % (this.width + 400);
+    this.hillsLayer2 = (this.hillsLayer2 + this.speed * 0.45 * dt) % (this.width + 400);
+    this.hillsLayer3 = (this.hillsLayer3 + this.speed * 0.85 * dt) % (this.width + 400);
 
     // 3D Volumetric Clouds Drift
     this.clouds.forEach(c => {
-      c.x -= c.speed;
+      c.x -= c.speed * dt;
       if (c.x < -180) c.x = this.width + 180;
     });
 
     // Far 3D Hot Air Balloon Floating
-    this.balloon.bob += 0.03;
+    this.balloon.bob += 0.03 * dt;
     this.balloon.y = 85 + Math.sin(this.balloon.bob) * 12;
-    this.balloon.x -= 0.15;
+    this.balloon.x -= 0.15 * dt;
     if (this.balloon.x < -100) this.balloon.x = this.width + 120;
 
     // -------------------------------------------------------------
     // 3D Speed Lines & Comet Exhaust Trail Particles
     // -------------------------------------------------------------
     const isBoosting = this.boostTimer > 0 || this.starBoostTimer > 0;
+    const isMobile = window.innerWidth <= 768;
 
-    // Rear wheel / exhaust particle generation
-    if (Math.random() > (isBoosting ? 0.08 : 0.25)) {
+    // Rear wheel / exhaust particle generation (throttled on mobile to save frames)
+    const particleThreshold = isMobile ? (isBoosting ? 0.35 : 0.6) : (isBoosting ? 0.08 : 0.25);
+    if (Math.random() > particleThreshold) {
       const pColor = this.boostTimer > 0 
         ? (Math.random() > 0.4 ? '#F43F5E' : '#FB7185') 
         : (this.starBoostTimer > 0 
@@ -361,17 +438,17 @@ class LightningTrikeGame {
         vy: (Math.random() - 0.5) * 2.2,
         life: 1.0,
         color: pColor,
-        size: Math.random() * 7 + (isBoosting ? 6 : 3),
+        size: Math.random() * 6 + (isBoosting ? 5 : 3),
         type: isBoosting ? 'star-trail' : 'spark'
       });
     }
 
     // High-speed horizontal wind streaks during Star Boost or Turbo
-    if (isBoosting && Math.random() > 0.3) {
+    if (isBoosting && Math.random() > (isMobile ? 0.55 : 0.3)) {
       this.speedStreaks.push({
         x: this.width + 50,
         y: Math.random() * (this.height - 150) + 40,
-        len: Math.random() * 90 + 50,
+        len: Math.random() * 80 + 40,
         speed: this.speed * 1.8 + Math.random() * 5,
         alpha: Math.random() * 0.4 + 0.3,
         color: this.boostTimer > 0 ? '#F43F5E' : '#FBBF24'
@@ -380,24 +457,24 @@ class LightningTrikeGame {
 
     // Update Particles
     this.particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life -= 0.038;
-      p.size *= 0.96;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= 0.038 * dt;
+      p.size *= Math.pow(0.96, dt);
     });
     this.particles = this.particles.filter(p => p.life > 0);
 
     // Update Speed Streaks
     this.speedStreaks.forEach(s => {
-      s.x -= s.speed;
-      s.alpha -= 0.015;
+      s.x -= s.speed * dt;
+      s.alpha -= 0.015 * dt;
     });
     this.speedStreaks = this.speedStreaks.filter(s => s.x > -s.len && s.alpha > 0);
 
     // Update Floating Score Popups (+1)
     this.scorePopups.forEach(sp => {
-      sp.y += sp.vy;
-      sp.life -= 0.03;
+      sp.y += sp.vy * dt;
+      sp.life -= 0.03 * dt;
       sp.scale = Math.min(1.4, 0.8 + (1 - sp.life) * 0.8);
     });
     this.scorePopups = this.scorePopups.filter(sp => sp.life > 0);
@@ -405,8 +482,8 @@ class LightningTrikeGame {
     // -------------------------------------------------------------
     // 3D Collectible Stars Spawning & High-Speed Star Dash Collision
     // -------------------------------------------------------------
-    this.starSpawnTimer++;
-    if (this.starSpawnTimer > 68) {
+    this.starSpawnTimer += dt;
+    if (this.starSpawnTimer > 65) {
       this.starSpawnTimer = 0;
       const isHigh = Math.random() > 0.45;
       this.stars.push({
@@ -422,8 +499,8 @@ class LightningTrikeGame {
 
     // Star Collision Check
     this.stars.forEach(star => {
-      star.x -= this.speed;
-      star.rotY += star.rotSpeed + (isBoosting ? 0.06 : 0);
+      star.x -= this.speed * dt;
+      star.rotY += (star.rotSpeed + (isBoosting ? 0.06 : 0)) * dt;
 
       // Smooth collision bounding check
       const dx = star.x - this.trike.x;
@@ -435,15 +512,11 @@ class LightningTrikeGame {
         this.score++;
         this.updateScoreUI();
 
-        // =========================================================
-        // FIX FOR "when cycle touch to star cycles speed very slow":
-        // Touching a star triggers an EXHILARATING STAR DASH BOOST!
-        // Instead of slowing down, the trike surges forward joyfully!
-        // =========================================================
-        this.starBoostTimer = 45; // ~0.75 seconds of star speed boost
-        this.speed = Math.min(this.baseSpeed + 3.2, 9.4);
+        // Star Dash Boost: surge forward joyfully with excitement!
+        this.starBoostTimer = 48; // ~0.8 seconds of star speed boost
+        this.speed = Math.min(this.baseSpeed + 3.4, 9.8);
 
-        // Play gentle, harmonious pentatonic chime
+        // Play gentle, harmonious chime
         if (window.babyAudio) {
           window.babyAudio.playChime(this.score % window.babyAudio.pentatonicScale.length, 1.2);
         }
@@ -457,23 +530,24 @@ class LightningTrikeGame {
           scale: 0.8
         });
 
-        // Spawn 3D golden star shards & radiant sparkles
-        for (let i = 0; i < 12; i++) {
-          const a = (Math.PI * 2 / 12) * i + (Math.random() - 0.5) * 0.3;
+        // Spawn 3D golden star shards on canvas
+        const shardCount = isMobile ? 7 : 12;
+        for (let i = 0; i < shardCount; i++) {
+          const a = (Math.PI * 2 / shardCount) * i + (Math.random() - 0.5) * 0.3;
           const spd = Math.random() * 5 + 3.5;
           this.particles.push({
             x: star.x,
             y: star.y,
             vx: Math.cos(a) * spd,
             vy: Math.sin(a) * spd,
-            size: Math.random() * 7 + 4,
+            size: Math.random() * 6 + 4,
             life: 1.0,
             color: Math.random() > 0.4 ? '#FDE047' : '#F59E0B',
             type: 'star-shard'
           });
         }
 
-        if (window.particleFX) {
+        if (!isMobile && window.particleFX) {
           window.particleFX.burst(star.x, star.y, 'stars', '#F59E0B');
         }
 
@@ -542,18 +616,7 @@ class LightningTrikeGame {
   // 1. 3D ATMOSPHERIC SKY & CELESTIAL BODIES
   // =========================================================================
   draw3DSky(isNight) {
-    const skyGrad = this.ctx.createLinearGradient(0, 0, 0, this.height);
-    if (isNight) {
-      skyGrad.addColorStop(0, '#0F172A');
-      skyGrad.addColorStop(0.55, '#1E1B4B');
-      skyGrad.addColorStop(1, '#312E81');
-    } else {
-      skyGrad.addColorStop(0, '#7DD3FC');
-      skyGrad.addColorStop(0.5, '#BAE6FD');
-      skyGrad.addColorStop(0.85, '#E0F2FE');
-      skyGrad.addColorStop(1, '#FEF9C3');
-    }
-    this.ctx.fillStyle = skyGrad;
+    this.ctx.fillStyle = isNight ? (this.skyGradNight || '#0F172A') : (this.skyGradDay || '#7DD3FC');
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     if (isNight) {
@@ -562,13 +625,9 @@ class LightningTrikeGame {
       const my = 90;
       
       // Outer Lunar Glow
-      const moonGlow = this.ctx.createRadialGradient(mx, my, 10, mx, my, 70);
-      moonGlow.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
-      moonGlow.addColorStop(0.5, 'rgba(253, 224, 71, 0.15)');
-      moonGlow.addColorStop(1, 'rgba(253, 224, 71, 0)');
-      this.ctx.fillStyle = moonGlow;
+      this.ctx.fillStyle = 'rgba(254, 240, 138, 0.2)';
       this.ctx.beginPath();
-      this.ctx.arc(mx, my, 70, 0, Math.PI * 2);
+      this.ctx.arc(mx, my, 55, 0, Math.PI * 2);
       this.ctx.fill();
 
       // Crescent Moon Body
@@ -584,47 +643,39 @@ class LightningTrikeGame {
       this.ctx.fill();
 
       // Twinkling Background 3D Diamond Stars
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 15; i++) {
         const sx = ((i * 137.5 + this.hillsLayer1 * 0.1) % this.width);
         const sy = (i * 29) % (this.groundY - 140) + 20;
-        const sSize = (i % 3 === 0) ? 3.5 : 2;
+        const sSize = (i % 3 === 0) ? 3 : 2;
         const twinkle = 0.5 + Math.sin(this.distance * 0.05 + i) * 0.4;
         
-        this.ctx.save();
-        this.ctx.translate(sx, sy);
         this.ctx.fillStyle = `rgba(254, 249, 195, ${twinkle})`;
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, -sSize);
-        this.ctx.lineTo(sSize, 0);
-        this.ctx.lineTo(0, sSize);
-        this.ctx.lineTo(-sSize, 0);
-        this.ctx.closePath();
-        this.ctx.fill();
-        this.ctx.restore();
+        this.ctx.fillRect(sx - sSize, sy - sSize, sSize * 2, sSize * 2);
       }
     } else {
       // 3D Radiant Sun with Corona & God Rays
       const sunX = this.width - 140;
       const sunY = 95;
 
-      const sunGlow = this.ctx.createRadialGradient(sunX, sunY, 15, sunX, sunY, 120);
-      sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.7)');
-      sunGlow.addColorStop(0.4, 'rgba(251, 191, 36, 0.25)');
-      sunGlow.addColorStop(1, 'rgba(251, 191, 36, 0)');
-      this.ctx.fillStyle = sunGlow;
+      this.ctx.fillStyle = 'rgba(254, 240, 138, 0.35)';
       this.ctx.beginPath();
-      this.ctx.arc(sunX, sunY, 120, 0, Math.PI * 2);
+      this.ctx.arc(sunX, sunY, 80, 0, Math.PI * 2);
       this.ctx.fill();
 
       // Sun Core with 3D Sphere Shading
-      const sunCore = this.ctx.createRadialGradient(sunX - 10, sunY - 10, 5, sunX, sunY, 36);
-      sunCore.addColorStop(0, '#FFFFFF');
-      sunCore.addColorStop(0.3, '#FEF08A');
-      sunCore.addColorStop(0.85, '#F59E0B');
-      sunCore.addColorStop(1, '#D97706');
-      this.ctx.fillStyle = sunCore;
+      this.ctx.fillStyle = '#F59E0B';
       this.ctx.beginPath();
       this.ctx.arc(sunX, sunY, 36, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.fillStyle = '#FEF08A';
+      this.ctx.beginPath();
+      this.ctx.arc(sunX - 5, sunY - 5, 26, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.beginPath();
+      this.ctx.arc(sunX - 8, sunY - 8, 12, 0, Math.PI * 2);
       this.ctx.fill();
     }
   }
@@ -639,13 +690,14 @@ class LightningTrikeGame {
     this.ctx.translate(b.x, b.y);
 
     // Balloon Sphere Volume
-    const bGrad = this.ctx.createRadialGradient(-8, -12, 4, 0, 0, 28);
-    bGrad.addColorStop(0, '#FFF1F2');
-    bGrad.addColorStop(0.4, '#FB7185');
-    bGrad.addColorStop(1, '#BE123C');
-    this.ctx.fillStyle = bGrad;
+    this.ctx.fillStyle = '#FB7185';
     this.ctx.beginPath();
     this.ctx.arc(0, 0, 24, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = '#FFF1F2';
+    this.ctx.beginPath();
+    this.ctx.arc(-6, -6, 12, 0, Math.PI * 2);
     this.ctx.fill();
 
     // Vertical Curved Stripes (Perspective foreshortening)
@@ -679,32 +731,20 @@ class LightningTrikeGame {
       this.ctx.translate(c.x, c.y);
       this.ctx.scale(c.scale, c.scale);
 
-      // Render each sphere puff with soft top-left key lighting and ambient underbelly
+      // Render each sphere puff with soft top highlight
       c.puffs.forEach(puff => {
         const cx = puff.dx;
         const cy = puff.dy;
         const r = puff.r;
 
-        const puffGrad = this.ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
-        if (isNight) {
-          puffGrad.addColorStop(0, 'rgba(226, 232, 240, 0.45)');
-          puffGrad.addColorStop(0.7, 'rgba(148, 163, 184, 0.35)');
-          puffGrad.addColorStop(1, 'rgba(71, 85, 105, 0.25)');
-        } else {
-          puffGrad.addColorStop(0, '#FFFFFF');
-          puffGrad.addColorStop(0.55, '#F8FAFC');
-          puffGrad.addColorStop(0.85, '#E2E8F0');
-          puffGrad.addColorStop(1, '#CBD5E1'); // Underbelly volume shadow
-        }
-
-        this.ctx.fillStyle = puffGrad;
+        this.ctx.fillStyle = isNight ? 'rgba(203, 213, 225, 0.45)' : '#FFFFFF';
         this.ctx.beginPath();
         this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
         this.ctx.fill();
 
         // Top Sunlight Rim Highlight
         if (!isNight) {
-          this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+          this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
           this.ctx.lineWidth = 2.5;
           this.ctx.beginPath();
           this.ctx.arc(cx, cy, r - 1.5, Math.PI * 1.1, Math.PI * 1.8);
@@ -723,16 +763,7 @@ class LightningTrikeGame {
     // -------------------------------------------------------------
     // Layer 1: Distant Misty Mountain Ridges (Lavender / Cosmic Indigo)
     // -------------------------------------------------------------
-    const hillGrad1 = this.ctx.createLinearGradient(0, this.height - 240, 0, this.height);
-    if (isNight) {
-      hillGrad1.addColorStop(0, '#312E81');
-      hillGrad1.addColorStop(1, '#1E1B4B');
-    } else {
-      hillGrad1.addColorStop(0, '#C7D2FE');
-      hillGrad1.addColorStop(0.6, '#A5B4FC');
-      hillGrad1.addColorStop(1, '#818CF8');
-    }
-    this.ctx.fillStyle = hillGrad1;
+    this.ctx.fillStyle = isNight ? (this.hill1Night || '#312E81') : (this.hill1Day || '#818CF8');
     this.ctx.beginPath();
     this.ctx.moveTo(0, this.height);
     for (let x = 0; x <= this.width + 40; x += 40) {
@@ -745,16 +776,7 @@ class LightningTrikeGame {
     // -------------------------------------------------------------
     // Layer 2: Mid-Distance Rolling Hills (Mint Jade / Deep Teal)
     // -------------------------------------------------------------
-    const hillGrad2 = this.ctx.createLinearGradient(0, this.height - 180, 0, this.height);
-    if (isNight) {
-      hillGrad2.addColorStop(0, '#065F46');
-      hillGrad2.addColorStop(1, '#022C22');
-    } else {
-      hillGrad2.addColorStop(0, '#A7F3D0');
-      hillGrad2.addColorStop(0.5, '#6EE7B7');
-      hillGrad2.addColorStop(1, '#34D399');
-    }
-    this.ctx.fillStyle = hillGrad2;
+    this.ctx.fillStyle = isNight ? (this.hill2Night || '#065F46') : (this.hill2Day || '#34D399');
     this.ctx.beginPath();
     this.ctx.moveTo(0, this.height);
     for (let x = 0; x <= this.width + 30; x += 30) {
@@ -772,16 +794,7 @@ class LightningTrikeGame {
     // -------------------------------------------------------------
     // Layer 3: Vibrant Foreground Rolling Hills (Emerald Spring Green)
     // -------------------------------------------------------------
-    const hillGrad3 = this.ctx.createLinearGradient(0, this.height - 130, 0, this.height);
-    if (isNight) {
-      hillGrad3.addColorStop(0, '#047857');
-      hillGrad3.addColorStop(1, '#064E3B');
-    } else {
-      hillGrad3.addColorStop(0, '#4ADE80');
-      hillGrad3.addColorStop(0.4, '#22C55E');
-      hillGrad3.addColorStop(1, '#16A34A');
-    }
-    this.ctx.fillStyle = hillGrad3;
+    this.ctx.fillStyle = isNight ? (this.hill3Night || '#047857') : (this.hill3Day || '#16A34A');
     this.ctx.beginPath();
     this.ctx.moveTo(0, this.height);
     for (let x = 0; x <= this.width + 30; x += 30) {
@@ -800,50 +813,27 @@ class LightningTrikeGame {
     const roadHeight = 22;
 
     // 3D Grassy Meadow Bank (Under the track)
-    const grassGrad = this.ctx.createLinearGradient(0, this.groundY, 0, this.height);
-    if (isNight) {
-      grassGrad.addColorStop(0, '#064E3B');
-      grassGrad.addColorStop(1, '#022C22');
-    } else {
-      grassGrad.addColorStop(0, '#10B981');
-      grassGrad.addColorStop(0.4, '#059669');
-      grassGrad.addColorStop(1, '#047857');
-    }
-    this.ctx.fillStyle = grassGrad;
+    this.ctx.fillStyle = isNight ? (this.grassNight || '#064E3B') : (this.grassDay || '#10B981');
     this.ctx.fillRect(0, this.groundY, this.width, this.height - this.groundY);
 
     // 3D Curved Road Curb / Top Rim (Glossy white pipe reflection)
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
     this.ctx.fillRect(0, roadY - 3, this.width, 3);
 
-    // 6-Band Vibrant 3D Cylindrical Rainbow Highway
-    const rainbowColors = [
-      { top: '#FB7185', bot: '#E11D48' }, // Pink-Red
-      { top: '#FB923C', bot: '#EA580C' }, // Warm Orange
-      { top: '#FDE047', bot: '#CA8A04' }, // Turbo Yellow
-      { top: '#4ADE80', bot: '#16A34A' }, // Emerald Green
-      { top: '#38BDF8', bot: '#0284C7' }, // Electric Cyan
-      { top: '#C084FC', bot: '#7E22CE' }  // Cosmic Violet
-    ];
-
+    // 6-Band Vibrant 3D Cylindrical Rainbow Highway (Zero gradient overhead!)
+    const rainbowColors = ['#FB7185', '#FB923C', '#FDE047', '#4ADE80', '#38BDF8', '#C084FC'];
     const stripeH = roadHeight / rainbowColors.length;
-    rainbowColors.forEach((band, idx) => {
+    rainbowColors.forEach((color, idx) => {
       const sy = roadY + idx * stripeH;
-      const bGrad = this.ctx.createLinearGradient(0, sy, 0, sy + stripeH);
-      bGrad.addColorStop(0, band.top);
-      bGrad.addColorStop(1, band.bot);
-      this.ctx.fillStyle = bGrad;
+      this.ctx.fillStyle = color;
       this.ctx.fillRect(0, sy, this.width, stripeH);
     });
 
-    // Glassy Specular Surface Sheen across the rainbow road
-    const sheenGrad = this.ctx.createLinearGradient(0, roadY, 0, roadY + roadHeight);
-    sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-    sheenGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.15)');
-    sheenGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.05)');
-    sheenGrad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
-    this.ctx.fillStyle = sheenGrad;
-    this.ctx.fillRect(0, roadY, this.width, roadHeight);
+    // Glassy Specular Surface Sheen across the rainbow road (Cached linear gradient!)
+    if (this.roadSheenGrad) {
+      this.ctx.fillStyle = this.roadSheenGrad;
+      this.ctx.fillRect(0, roadY, this.width, roadHeight);
+    }
 
     // Bottom Road Curb Shadow
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
@@ -886,30 +876,37 @@ class LightningTrikeGame {
     this.ctx.quadraticCurveTo(4, 10, 2, 18);
     this.ctx.stroke();
 
-    // 5 Volumetric 3D Petals
+    // 5 Petals
+    this.ctx.fillStyle = '#F472B6';
     for (let i = 0; i < 5; i++) {
       const a = (i * 2 * Math.PI) / 5;
       const px = Math.cos(a) * 9;
       const py = Math.sin(a) * 9;
-
-      const pGrad = this.ctx.createRadialGradient(px - 2, py - 2, 1, px, py, 6);
-      pGrad.addColorStop(0, '#FFF1F2');
-      pGrad.addColorStop(0.6, '#F472B6');
-      pGrad.addColorStop(1, '#DB2777');
-      this.ctx.fillStyle = pGrad;
       this.ctx.beginPath();
       this.ctx.arc(px, py, 5.5, 0, Math.PI * 2);
       this.ctx.fill();
     }
 
-    // 3D Spherical Pistil Center (Yellow button with specular shine)
-    const cGrad = this.ctx.createRadialGradient(-2, -2, 1, 0, 0, 5.5);
-    cGrad.addColorStop(0, '#FEF08A');
-    cGrad.addColorStop(0.7, '#F59E0B');
-    cGrad.addColorStop(1, '#B45309');
-    this.ctx.fillStyle = cGrad;
+    // Petal specular sheen
+    this.ctx.fillStyle = '#FFF1F2';
+    for (let i = 0; i < 5; i++) {
+      const a = (i * 2 * Math.PI) / 5;
+      const px = Math.cos(a) * 9 - 1.5;
+      const py = Math.sin(a) * 9 - 1.5;
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+
+    // 3D Spherical Pistil Center
+    this.ctx.fillStyle = '#F59E0B';
     this.ctx.beginPath();
     this.ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = '#FEF08A';
+    this.ctx.beginPath();
+    this.ctx.arc(-1.5, -1.5, 2.2, 0, Math.PI * 2);
     this.ctx.fill();
 
     this.ctx.restore();
@@ -930,15 +927,19 @@ class LightningTrikeGame {
     this.ctx.fill();
 
     // 3D Red Mushroom Dome Cap
-    const capGrad = this.ctx.createRadialGradient(-3, -6, 2, 0, -2, 12);
-    capGrad.addColorStop(0, '#FDA4AF');
-    capGrad.addColorStop(0.4, '#EF4444');
-    capGrad.addColorStop(1, '#991B1B');
-    this.ctx.fillStyle = capGrad;
+    this.ctx.fillStyle = '#EF4444';
     this.ctx.beginPath();
     this.ctx.arc(0, 0, 11, Math.PI, 0);
     this.ctx.closePath();
     this.ctx.fill();
+
+    // Cap Highlight
+    this.ctx.fillStyle = '#FDA4AF';
+    this.ctx.beginPath();
+    this.ctx.arc(-3, -3, 5, Math.PI * 0.9, Math.PI * 1.8);
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeStyle = '#FDA4AF';
+    this.ctx.stroke();
 
     // White Polka Dots
     this.ctx.fillStyle = '#FFFFFF';
@@ -965,14 +966,10 @@ class LightningTrikeGame {
     this.ctx.save();
     this.ctx.translate(cx, cy);
 
-    // 1. Soft Pulsing 3D Golden Aura Halo
-    const auraGrad = this.ctx.createRadialGradient(0, 0, size * 0.4, 0, 0, size * 1.4);
-    auraGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
-    auraGrad.addColorStop(0.5, 'rgba(245, 158, 11, 0.18)');
-    auraGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
-    this.ctx.fillStyle = auraGrad;
+    // 1. Soft Pulsing 3D Golden Aura Halo (Translucent flat circle, 100% zero gradient overhead!)
+    this.ctx.fillStyle = 'rgba(254, 240, 138, 0.32)';
     this.ctx.beginPath();
-    this.ctx.arc(0, 0, size * 1.4, 0, Math.PI * 2);
+    this.ctx.arc(0, 0, size * 1.35, 0, Math.PI * 2);
     this.ctx.fill();
 
     // 2. 3D Faceted Polygonal Star Projected Around Y-Axis
@@ -1130,13 +1127,14 @@ class LightningTrikeGame {
         this.ctx.closePath();
         this.ctx.fill();
       } else if (p.type === 'star-trail') {
-        const sGrad = this.ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, p.size);
-        sGrad.addColorStop(0, '#FFFFFF');
-        sGrad.addColorStop(0.5, p.color);
-        sGrad.addColorStop(1, 'rgba(255,255,255,0)');
-        this.ctx.fillStyle = sGrad;
+        this.ctx.fillStyle = p.color;
         this.ctx.beginPath();
         this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.arc(p.x, p.y, p.size * 0.45, 0, Math.PI * 2);
         this.ctx.fill();
       } else {
         this.ctx.fillStyle = p.color;
@@ -1161,14 +1159,9 @@ class LightningTrikeGame {
     const scaleFactor = 1 + (heightAboveGround * 0.005);
     const rx = 36 * scaleFactor;
     const ry = Math.max(4, 9 - heightAboveGround * 0.02);
-    const alpha = Math.max(0.12, 0.45 - heightAboveGround * 0.0028);
+    const alpha = Math.max(0.08, 0.38 - heightAboveGround * 0.0028);
 
-    const sGrad = this.ctx.createRadialGradient(shadowX, shadowY, 2, shadowX, shadowY, rx);
-    sGrad.addColorStop(0, `rgba(0, 0, 0, ${alpha})`);
-    sGrad.addColorStop(0.5, `rgba(0, 0, 0, ${alpha * 0.5})`);
-    sGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-    this.ctx.fillStyle = sGrad;
+    this.ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
     this.ctx.beginPath();
     this.ctx.ellipse(shadowX, shadowY, rx, ry, 0, 0, Math.PI * 2);
     this.ctx.fill();
@@ -1198,14 +1191,15 @@ class LightningTrikeGame {
     // Seat Post to Front Fork Tube
     this.draw3DTube(0, -25, 28, -12, '#EF4444', 8);
 
-    // Ergonomic 3D Saddle Seat (Plush dark leather cushion)
-    const seatGrad = this.ctx.createRadialGradient(-3, -29, 2, 0, -27, 14);
-    seatGrad.addColorStop(0, '#334155');
-    seatGrad.addColorStop(0.6, '#1E293B');
-    seatGrad.addColorStop(1, '#0F172A');
-    this.ctx.fillStyle = seatGrad;
+    // Ergonomic 3D Saddle Seat (Plush cushion)
+    this.ctx.fillStyle = '#1E293B';
     this.ctx.beginPath();
     this.ctx.ellipse(0, -27, 13, 6, -0.15, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = '#475569';
+    this.ctx.beginPath();
+    this.ctx.ellipse(-2, -28, 8, 3, -0.15, 0, Math.PI * 2);
     this.ctx.fill();
 
     // -------------------------------------------------------------
@@ -1221,17 +1215,17 @@ class LightningTrikeGame {
     this.ctx.fill();
 
     // 3D Brass Bell with gleam reflection
-    const bellGrad = this.ctx.createRadialGradient(23, -51, 1, 24, -49, 7);
-    bellGrad.addColorStop(0, '#FEF08A');
-    bellGrad.addColorStop(0.5, '#F59E0B');
-    bellGrad.addColorStop(1, '#B45309');
-    this.ctx.fillStyle = bellGrad;
+    this.ctx.fillStyle = '#F59E0B';
     this.ctx.beginPath();
     this.ctx.arc(24, -49, 7, 0, Math.PI * 2);
     this.ctx.fill();
 
+    this.ctx.fillStyle = '#FEF08A';
+    this.ctx.beginPath();
+    this.ctx.arc(22, -51, 2.5, 0, Math.PI * 2);
+    this.ctx.fill();
+
     if (this.bellRinging > 0) {
-      // Vibration rings
       this.ctx.strokeStyle = '#FEF08A';
       this.ctx.lineWidth = 1.8;
       this.ctx.beginPath();
@@ -1272,13 +1266,8 @@ class LightningTrikeGame {
     this.ctx.translate(cx, cy);
     this.ctx.rotate(angle);
 
-    // Outer Thick 3D Rubber Tire with Depth Bevel
-    const tireGrad = this.ctx.createRadialGradient(0, 0, r * 0.65, 0, 0, r);
-    tireGrad.addColorStop(0, '#334155');
-    tireGrad.addColorStop(0.4, '#1E293B');
-    tireGrad.addColorStop(0.85, '#0F172A');
-    tireGrad.addColorStop(1, '#020617');
-    this.ctx.fillStyle = tireGrad;
+    // Outer Thick 3D Rubber Tire
+    this.ctx.fillStyle = '#0F172A';
     this.ctx.beginPath();
     this.ctx.arc(0, 0, r, 0, Math.PI * 2);
     this.ctx.fill();
@@ -1294,19 +1283,14 @@ class LightningTrikeGame {
       this.ctx.rotate(Math.PI / 4);
     }
 
-    // 3D Metallic Golden Rim with Inset Shadow
-    const rimGrad = this.ctx.createRadialGradient(-r * 0.2, -r * 0.2, r * 0.1, 0, 0, r * 0.68);
-    rimGrad.addColorStop(0, '#FEF08A');
-    rimGrad.addColorStop(0.45, '#FBBF24');
-    rimGrad.addColorStop(0.85, '#F59E0B');
-    rimGrad.addColorStop(1, '#B45309');
-    this.ctx.fillStyle = rimGrad;
+    // 3D Metallic Golden Rim
+    this.ctx.fillStyle = '#FBBF24';
     this.ctx.beginPath();
     this.ctx.arc(0, 0, r * 0.68, 0, Math.PI * 2);
     this.ctx.fill();
 
     // Chrome Spokes (4 crossing pairs)
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    this.ctx.strokeStyle = '#FFFFFF';
     this.ctx.lineWidth = 2;
     for (let i = 0; i < 4; i++) {
       this.ctx.beginPath();
@@ -1317,14 +1301,14 @@ class LightningTrikeGame {
     }
 
     // 3D Chrome Center Axle Hub
-    const hubGrad = this.ctx.createRadialGradient(-2, -2, 1, 0, 0, r * 0.26);
-    hubGrad.addColorStop(0, '#FFFFFF');
-    hubGrad.addColorStop(0.3, '#E2E8F0');
-    hubGrad.addColorStop(0.7, '#EF4444');
-    hubGrad.addColorStop(1, '#991B1B');
-    this.ctx.fillStyle = hubGrad;
+    this.ctx.fillStyle = '#EF4444';
     this.ctx.beginPath();
     this.ctx.arc(0, 0, r * 0.26, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.beginPath();
+    this.ctx.arc(-1.5, -1.5, r * 0.1, 0, Math.PI * 2);
     this.ctx.fill();
 
     this.ctx.restore();
@@ -1355,13 +1339,14 @@ class LightningTrikeGame {
     this.ctx.save();
 
     // Chrome Housing Bucket
-    const bucketGrad = this.ctx.createRadialGradient(hx - 2, hy - 2, 1, hx, hy, 9);
-    bucketGrad.addColorStop(0, '#FFFFFF');
-    bucketGrad.addColorStop(0.4, '#CBD5E1');
-    bucketGrad.addColorStop(1, '#475569');
-    this.ctx.fillStyle = bucketGrad;
+    this.ctx.fillStyle = '#CBD5E1';
     this.ctx.beginPath();
     this.ctx.arc(hx, hy, 8, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.beginPath();
+    this.ctx.arc(hx - 2, hy - 2, 3, 0, Math.PI * 2);
     this.ctx.fill();
 
     // Rounded Glass Lens
@@ -1372,12 +1357,7 @@ class LightningTrikeGame {
 
     // Volumetric Conical Light Beam
     const beamLen = isNight ? 220 : 130;
-    const beamGrad = this.ctx.createLinearGradient(hx + 6, hy, hx + beamLen, hy);
-    beamGrad.addColorStop(0, isNight ? 'rgba(254, 240, 138, 0.75)' : 'rgba(254, 240, 138, 0.45)');
-    beamGrad.addColorStop(0.35, isNight ? 'rgba(254, 240, 138, 0.35)' : 'rgba(254, 240, 138, 0.15)');
-    beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
-
-    this.ctx.fillStyle = beamGrad;
+    this.ctx.fillStyle = isNight ? 'rgba(254, 240, 138, 0.22)' : 'rgba(254, 240, 138, 0.12)';
     this.ctx.beginPath();
     this.ctx.moveTo(hx + 6, hy - 4);
     this.ctx.lineTo(hx + beamLen, hy - 36);
@@ -1388,7 +1368,7 @@ class LightningTrikeGame {
 
     // Floating Dust Motes inside the light beam
     if (isNight) {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 4; i++) {
         const mx = hx + 20 + ((this.distance * 1.5 + i * 35) % (beamLen - 40));
         const my = hy + Math.sin(this.distance * 0.1 + i) * 14;
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
@@ -1443,20 +1423,34 @@ class LightningTrikeGame {
     this.ctx.closePath();
     this.ctx.fill();
 
-    // High-Speed Plasma Jet Flames when boosting
+    // High-Speed Plasma Jet Flames when boosting (Crisp layered geometry!)
     if (isBoosting) {
-      const flameLen = this.boostTimer > 0 ? 34 : 22;
-      const fGrad = this.ctx.createLinearGradient(0, 0, -flameLen, 0);
-      fGrad.addColorStop(0, '#FFFFFF');
-      fGrad.addColorStop(0.3, '#38BDF8');
-      fGrad.addColorStop(0.7, '#F43F5E');
-      fGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+      const flameLen = this.boostTimer > 0 ? 32 : 20;
 
-      this.ctx.fillStyle = fGrad;
+      // Outer Flame
+      this.ctx.fillStyle = '#F43F5E';
       this.ctx.beginPath();
       this.ctx.moveTo(-10, -7);
-      this.ctx.lineTo(-10 - flameLen - Math.random() * 8, 0);
+      this.ctx.lineTo(-10 - flameLen - Math.random() * 6, 0);
       this.ctx.lineTo(-10, 7);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // Inner Flame
+      this.ctx.fillStyle = '#38BDF8';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-10, -4);
+      this.ctx.lineTo(-10 - flameLen * 0.65, 0);
+      this.ctx.lineTo(-10, 4);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // White Core
+      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-10, -2);
+      this.ctx.lineTo(-10 - flameLen * 0.35, 0);
+      this.ctx.lineTo(-10, 2);
       this.ctx.closePath();
       this.ctx.fill();
     }
@@ -1475,12 +1469,7 @@ class LightningTrikeGame {
     const capeLen = isBoosting ? 44 : 32;
     const capeWave = Math.sin(this.trike.capeWave) * 8;
 
-    const capeGrad = this.ctx.createLinearGradient(0, -10, -capeLen, 0);
-    capeGrad.addColorStop(0, '#FB7185');
-    capeGrad.addColorStop(0.5, '#F43F5E');
-    capeGrad.addColorStop(1, '#BE123C');
-    this.ctx.fillStyle = capeGrad;
-
+    this.ctx.fillStyle = '#F43F5E';
     this.ctx.beginPath();
     this.ctx.moveTo(-6, -12);
     this.ctx.quadraticCurveTo(-capeLen * 0.5, -16 + capeWave, -capeLen, -6 + capeWave * 1.4);
@@ -1489,17 +1478,22 @@ class LightningTrikeGame {
     this.ctx.closePath();
     this.ctx.fill();
 
+    // Cape rim highlight
+    this.ctx.strokeStyle = '#FB7185';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.stroke();
+
     // -------------------------------------------------------------
     // 2. 3D Sculpted Onesie Body (Cozy Sky-Blue Clay Torso)
     // -------------------------------------------------------------
-    const bodyGrad = this.ctx.createRadialGradient(-3, -12, 3, 0, -8, 16);
-    bodyGrad.addColorStop(0, '#BAE6FD');
-    bodyGrad.addColorStop(0.4, '#38BDF8');
-    bodyGrad.addColorStop(0.85, '#0284C7');
-    bodyGrad.addColorStop(1, '#0369A1');
-    this.ctx.fillStyle = bodyGrad;
+    this.ctx.fillStyle = '#38BDF8';
     this.ctx.beginPath();
     this.ctx.ellipse(0, -8, 15, 17, 0.22, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = '#BAE6FD';
+    this.ctx.beginPath();
+    this.ctx.ellipse(-3, -11, 7, 9, 0.22, 0, Math.PI * 2);
     this.ctx.fill();
 
     // 3D Arms Reaching to Handlebars
@@ -1524,14 +1518,21 @@ class LightningTrikeGame {
     const headY = -30;
     const headR = 16;
 
-    const headGrad = this.ctx.createRadialGradient(headX - 5, headY - 6, 3, headX, headY, headR);
-    headGrad.addColorStop(0, '#FFFFFF');
-    headGrad.addColorStop(0.55, '#F8FAFC');
-    headGrad.addColorStop(0.85, '#E2E8F0');
-    headGrad.addColorStop(1, '#CBD5E1'); // Ambient occlusion under chin
-    this.ctx.fillStyle = headGrad;
+    this.ctx.fillStyle = '#F8FAFC';
     this.ctx.beginPath();
     this.ctx.arc(headX, headY, headR, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Subtle ambient shadow under chin
+    this.ctx.fillStyle = '#E2E8F0';
+    this.ctx.beginPath();
+    this.ctx.arc(headX, headY + 3, headR * 0.85, 0.2, Math.PI * 0.8);
+    this.ctx.fill();
+
+    // Top highlight
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.beginPath();
+    this.ctx.arc(headX - 4, headY - 6, 7, 0, Math.PI * 2);
     this.ctx.fill();
 
     // -------------------------------------------------------------
@@ -1545,7 +1546,7 @@ class LightningTrikeGame {
     this.draw3DEar(headX + 4, headY - 15, 5, 14, earTilt + 0.1);
 
     // -------------------------------------------------------------
-    // 5. 3D Aviator Goggles (Chrome rim, amber glass, specular reflection)
+    // 5. 3D Aviator Goggles
     // -------------------------------------------------------------
     // Dark Leather Strap
     this.ctx.fillStyle = '#0F172A';
@@ -1588,20 +1589,13 @@ class LightningTrikeGame {
     this.ctx.rotate(angle);
 
     // Outer Soft White Ear Volume
-    const earGrad = this.ctx.createRadialGradient(-rx * 0.3, -ry * 0.3, 2, 0, 0, ry);
-    earGrad.addColorStop(0, '#FFFFFF');
-    earGrad.addColorStop(0.7, '#F1F5F9');
-    earGrad.addColorStop(1, '#CBD5E1');
-    this.ctx.fillStyle = earGrad;
+    this.ctx.fillStyle = '#F8FAFC';
     this.ctx.beginPath();
     this.ctx.ellipse(0, -ry * 0.7, rx, ry, 0, 0, Math.PI * 2);
     this.ctx.fill();
 
     // Deep Pink Inner Ear Cavity
-    const innerGrad = this.ctx.createRadialGradient(0, -ry * 0.6, 1, 0, -ry * 0.6, ry * 0.6);
-    innerGrad.addColorStop(0, '#F472B6');
-    innerGrad.addColorStop(1, '#DB2777');
-    this.ctx.fillStyle = innerGrad;
+    this.ctx.fillStyle = '#F472B6';
     this.ctx.beginPath();
     this.ctx.ellipse(0, -ry * 0.7, rx * 0.55, ry * 0.7, 0, 0, Math.PI * 2);
     this.ctx.fill();
@@ -1617,16 +1611,12 @@ class LightningTrikeGame {
     this.ctx.fill();
 
     // Amber Tinted Glass Lens
-    const lensGrad = this.ctx.createRadialGradient(lx - 2, ly - 2, 1, lx, ly, r);
-    lensGrad.addColorStop(0, '#FEF08A');
-    lensGrad.addColorStop(0.6, '#F59E0B');
-    lensGrad.addColorStop(1, '#D97706');
-    this.ctx.fillStyle = lensGrad;
+    this.ctx.fillStyle = '#F59E0B';
     this.ctx.beginPath();
     this.ctx.arc(lx, ly, r, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Angled Specular Glare Reflection Line
+    // Specular Glare Reflection Line
     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
     this.ctx.lineWidth = 1.4;
     this.ctx.beginPath();
@@ -1666,11 +1656,19 @@ class LightningTrikeGame {
     });
   }
 
-  loop() {
+  loop(timestamp) {
     if (!this.isRunning) return;
-    this.update();
+    const now = timestamp || performance.now();
+    if (!this.lastTime) this.lastTime = now;
+    let dt = (now - this.lastTime) / 16.667;
+    this.lastTime = now;
+    // Guard against massive dt spikes on tab freeze / background resume
+    if (dt > 2.2) dt = 2.2;
+    if (dt < 0.1) dt = 1.0;
+
+    this.update(dt);
     this.draw();
-    this.animId = requestAnimationFrame(() => this.loop());
+    this.animId = requestAnimationFrame((t) => this.loop(t));
   }
 }
 
