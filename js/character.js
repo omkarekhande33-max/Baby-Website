@@ -254,6 +254,11 @@ class MascotController {
         this.handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
       }
     }, { passive: true });
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        this.handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
 
     // Mascot click / tap
     this.container.addEventListener('pointerdown', (e) => this.handleMascotClick(e));

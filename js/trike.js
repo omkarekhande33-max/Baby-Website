@@ -137,14 +137,26 @@ class LightningTrikeGame {
       }
     });
 
-    // Control Buttons
+    // Control Buttons with instant touch response
     const jumpBtn = document.getElementById('trike-jump-btn');
     const bellBtn = document.getElementById('trike-bell-btn');
     const turboBtn = document.getElementById('trike-turbo-btn');
 
-    if (jumpBtn) jumpBtn.addEventListener('click', () => this.jump());
-    if (bellBtn) bellBtn.addEventListener('click', () => this.ringBell());
-    if (turboBtn) turboBtn.addEventListener('click', () => this.turboBoost());
+    const bindAction = (btn, action) => {
+      if (!btn) return;
+      btn.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        action();
+      });
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    };
+
+    bindAction(jumpBtn, () => this.jump());
+    bindAction(bellBtn, () => this.ringBell());
+    bindAction(turboBtn, () => this.turboBoost());
   }
 
   start() {

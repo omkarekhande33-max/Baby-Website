@@ -66,6 +66,7 @@ html, body {
   background: var(--bg-gradient-day);
   transition: background 1.2s ease, color 0.6s ease;
   touch-action: manipulation;
+  overscroll-behavior: none;
   cursor: var(--cursor-wand);
 }
 
@@ -83,10 +84,12 @@ button, a, input, select, textarea,
 .creative-mascot-badge, .profile-save-btn, [role="button"], .interactive,
 .bedroom-tab-btn, .bedroom-widget-card, .tine-btn {
   cursor: var(--cursor-wand-hover) !important;
+  touch-action: manipulation;
 }
 
 #paint-canvas, #trike-canvas, #fx-canvas {
   cursor: var(--cursor-wand) !important;
+  touch-action: none; /* Prevents pull-to-refresh & gestures while drawing or playing trike */
 }
 
 /* App Container */
@@ -94,9 +97,11 @@ button, a, input, select, textarea,
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for modern iOS & Android browsers */
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* ==========================================================================
@@ -2086,84 +2091,7 @@ body.night-mode .robot-pill-btn.is-playing {
   object-fit: cover;
 }
 
-/* ==========================================================================
-   Responsive Adaptations
-   ========================================================================== */
-@media (max-width: 768px) {
-  .site-header {
-    padding: 10px 14px;
-  }
-  
-  .brand-title {
-    display: none;
-  }
-  
-  .nav-tabs {
-    padding: 4px 6px;
-    gap: 4px;
-  }
-  
-  .nav-tab-btn {
-    padding: 6px 10px;
-    font-size: 0.85rem;
-  }
-  
-  .nav-tab-btn span:last-child {
-    display: none; /* Icon only on mobile */
-  }
-  
-  .celestial-body {
-    top: 60px;
-    right: 16px;
-    width: 65px;
-    height: 65px;
-  }
-  
-  .sun-face {
-    font-size: 24px;
-  }
-  
-  .mascot-container {
-    width: 280px;
-    height: 280px;
-  }
-  
-  .paint-toolbar {
-    bottom: 12px;
-    padding: 8px 12px;
-    gap: 8px;
-    max-width: 95vw;
-    overflow-x: auto;
-  }
-  
-  .color-swatch {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .stamp-btn {
-    width: 30px;
-    height: 30px;
-    font-size: 1rem;
-  }
-  
-  .robot-container {
-    width: 260px;
-    height: 320px;
-  }
-  
-  .robot-dialogue-grid {
-    bottom: 12px;
-    padding: 8px 14px;
-    gap: 8px;
-    max-width: 95vw;
-  }
-  
-  .robot-pill-btn {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-  }
-}
+
 
 /* ==========================================================================
    Cozy Bedroom & Playful Music Box Suite (Track 1, Concept B)
@@ -2738,3 +2666,595 @@ body.night-mode .robot-pill-btn.is-playing {
   font-size: 0.75rem;
   color: #A34063;
 }
+
+/* ==========================================================================
+   Comprehensive Mobile & Touch Optimizations (All 6 Zones + Header)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* --- 1. Top Header & Nav Strip --- */
+  .site-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 6px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .brand-badge {
+    order: 1;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .brand-icon {
+    font-size: 22px;
+  }
+
+  .brand-title {
+    font-size: 1.05rem;
+  }
+
+  .header-controls {
+    order: 2;
+    gap: 6px;
+  }
+
+  .control-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+  }
+
+  .nav-tabs {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+    justify-content: flex-start;
+    padding: 5px 8px;
+    gap: 6px;
+    border-radius: var(--radius-full);
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-tab-btn {
+    flex: 0 0 auto;
+    padding: 7px 12px;
+    font-size: 0.82rem;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .nav-tab-btn span:last-child {
+    display: inline-block;
+  }
+
+  /* --- 2. Ambient Sky Elements on Mobile --- */
+  .celestial-body {
+    top: auto;
+    bottom: 20px;
+    right: 14px;
+    width: 52px;
+    height: 52px;
+    z-index: 4;
+    opacity: 0.85;
+  }
+
+  .sun-face {
+    font-size: 22px;
+  }
+
+  .floating-cloud {
+    transform: scale(0.65);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* --- 3. Zone 1: Pip the Bear Mascot --- */
+  .mascot-stage {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 85px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 75px);
+    justify-content: center;
+  }
+
+  .pip-puppet-container {
+    width: min(72vw, 270px);
+    max-height: 42vh;
+    aspect-ratio: 832 / 946;
+  }
+
+  .pip-playmat-shadow {
+    bottom: 68px;
+    width: min(75vw, 280px);
+    height: 28px;
+  }
+
+  .mascot-speech-bubble {
+    top: -36px;
+    font-size: 0.9rem;
+    padding: 6px 14px;
+    max-width: 90vw;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .floating-bubble {
+    font-size: 1.8rem;
+  }
+
+  .floating-star-orb {
+    font-size: 1.6rem;
+  }
+
+  .song-action-bar {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    padding: 6px 10px;
+    gap: 6px;
+    width: calc(100% - 20px);
+    max-width: 440px;
+    justify-content: center;
+  }
+
+  .song-btn {
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+
+  .song-btn .song-title {
+    font-size: 0.78rem;
+  }
+
+  /* --- 4. Zone 2: Cozy Bedroom Suite --- */
+  #view-bedroom {
+    padding: calc(env(safe-area-inset-top, 0px) + 105px) 12px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  }
+
+  .bedroom-stage {
+    gap: 14px;
+    padding-bottom: 24px;
+  }
+
+  .bedroom-top-bar {
+    padding: 10px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    border-radius: var(--radius-lg);
+  }
+
+  .bedroom-title {
+    font-size: 1.15rem;
+  }
+
+  .bedroom-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .bedroom-atmosphere-controls {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bedroom-interactive-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .bedroom-card {
+    padding: 14px;
+    gap: 12px;
+    border-radius: var(--radius-lg);
+  }
+
+  .music-box-frame {
+    padding: 12px;
+  }
+
+  .music-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .wind-key-btn, .play-melody-btn {
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+  }
+
+  .tension-meter-col {
+    width: 100%;
+  }
+
+  .blocks-carpet {
+    padding: 10px;
+    gap: 8px;
+    min-height: 90px;
+  }
+
+  .wooden-block {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+    border-radius: 10px;
+  }
+
+  .storybook-viewer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .story-thumb-col {
+    width: 100%;
+    height: 160px;
+  }
+
+  .growth-chart-stage {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .wooden-ruler-track {
+    flex-direction: row;
+    overflow-x: auto;
+    min-width: unset;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ruler-notch {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
+
+  /* --- 5. Zone 3: Finger Paints Canvas --- */
+  .paint-toolbar {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 16px);
+    max-width: 440px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    border-radius: var(--radius-lg);
+  }
+
+  .palette-swatches {
+    gap: 5px;
+  }
+
+  .color-swatch {
+    width: 30px;
+    height: 30px;
+  }
+
+  .brush-modes {
+    border: none;
+    padding: 0;
+    gap: 4px;
+  }
+
+  .brush-mode-btn {
+    padding: 6px 9px;
+    font-size: 0.76rem;
+  }
+
+  .stamp-selector {
+    gap: 4px;
+  }
+
+  .stamp-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+  }
+
+  .canvas-action-btn,
+  .save-canvas-btn {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  /* --- 6. Zone 4: Lightning Trike Adventure --- */
+  .trike-overlay-hud {
+    top: calc(env(safe-area-inset-top, 0px) + 94px);
+    left: 12px;
+    right: 12px;
+  }
+
+  .score-badge {
+    font-size: 1.1rem;
+    padding: 4px 12px 4px 6px;
+    gap: 6px;
+  }
+
+  .score-trike-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .score-star-icon {
+    font-size: 1.3rem;
+  }
+
+  .creative-trike-badge {
+    top: calc(env(safe-area-inset-top, 0px) + 94px);
+    right: 12px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .trike-touch-prompter {
+    top: calc(env(safe-area-inset-top, 0px) + 148px);
+    bottom: auto;
+    font-size: 0.82rem;
+    padding: 5px 14px;
+    max-width: 90vw;
+  }
+
+  .trike-controls {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    right: 12px;
+    gap: 10px;
+  }
+
+  .trike-btn {
+    width: 54px;
+    height: 54px;
+    font-size: 1.6rem;
+    border-width: 2.5px;
+  }
+
+  /* --- 7. Zone 5: Toy Robot Robo-Pal --- */
+  .robot-room {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 85px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    position: relative;
+  }
+
+  .creative-robot-badge {
+    top: calc(env(safe-area-inset-top, 0px) + 94px);
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .robot-speech-card {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+    padding: 5px 12px;
+    max-width: 92vw;
+    white-space: normal;
+    text-align: center;
+    animation: none;
+  }
+
+  .robot-speech-card::after {
+    display: none;
+  }
+
+  .robot-stage-wrapper {
+    margin-top: 0;
+    margin-bottom: 10px;
+    flex-shrink: 1;
+  }
+
+  .robot-container {
+    width: min(65vw, 210px);
+    height: min(28vh, 240px);
+  }
+
+  .robot-floor-assembly {
+    bottom: -6px;
+    width: 190px;
+    height: 36px;
+  }
+
+  .robot-pedestal-ring {
+    width: 180px;
+    height: 32px;
+  }
+
+  .robot-floor-shadow {
+    width: 110px;
+    height: 16px;
+  }
+
+  .robot-dialogue-grid {
+    position: relative;
+    bottom: auto;
+    width: calc(100% - 16px);
+    max-width: 440px;
+    padding: 7px 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    border-radius: var(--radius-lg);
+  }
+
+  .robot-pill-btn {
+    padding: 7px 8px;
+    font-size: 0.8rem;
+    min-height: 38px;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .robot-pill-btn .btn-icon {
+    font-size: 1.05rem;
+  }
+
+  /* --- 8. Zone 6: Gallery & Sticker Book --- */
+  .gallery-stage {
+    padding: calc(env(safe-area-inset-top, 0px) + 105px) 12px calc(env(safe-area-inset-bottom, 0px) + 24px);
+    gap: 14px;
+  }
+
+  .profile-card {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-lg);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .profile-inputs {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .profile-input-text {
+    flex: 1;
+    min-width: 120px;
+    font-size: 0.95rem;
+  }
+
+  .profile-save-btn {
+    padding: 7px 14px;
+    font-size: 0.85rem;
+  }
+
+  .sticker-book-section,
+  .artworks-gallery-section {
+    padding: 12px 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
+  .stickers-showcase-grid {
+    gap: 10px;
+  }
+
+  .sticker-badge-item {
+    padding: 8px 12px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .sticker-badge-icon {
+    font-size: 1.6rem;
+  }
+
+  .artworks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .artwork-frame-card {
+    padding: 8px;
+    border-radius: 14px;
+  }
+
+  .creative-stickers-row {
+    gap: 10px;
+  }
+
+  .creative-sticker-card {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+  }
+}
+
+/* Extra Narrow Mobile Screens (< 370px, e.g. iPhone SE / small Androids) */
+@media (max-width: 370px) {
+  .brand-title {
+    font-size: 0.92rem;
+  }
+
+  .pip-puppet-container {
+    width: 230px;
+  }
+
+  .song-btn {
+    padding: 6px 8px;
+    font-size: 0.74rem;
+  }
+
+  .robot-container {
+    width: 175px;
+    height: 195px;
+  }
+
+  .robot-pill-btn {
+    padding: 5px 4px;
+    font-size: 0.72rem;
+  }
+}
+
+/* Mobile Landscape & Short Viewports (< 520px height) */
+@media (max-height: 520px) {
+  .site-header {
+    padding: 4px 10px;
+    gap: 4px;
+  }
+
+  .pip-puppet-container {
+    max-height: 48vh;
+    width: min(40vw, 200px);
+  }
+
+  .song-action-bar {
+    bottom: 6px;
+    padding: 4px 8px;
+  }
+
+  .robot-container {
+    height: 160px;
+    width: 140px;
+  }
+
+  .robot-dialogue-grid {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 4px 6px;
+  }
+
+  .robot-pill-btn {
+    padding: 4px 6px;
+    min-height: 32px;
+  }
+}
+

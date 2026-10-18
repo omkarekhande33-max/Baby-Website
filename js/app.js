@@ -259,6 +259,18 @@ class AppCoordinator {
         handleWandMove(e.touches[0].clientX, e.touches[0].clientY);
       }
     }, { passive: true });
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        handleWandMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (window.particleFX) window.particleFX.resize();
+        if (this.paint) this.paint.resizeCanvas();
+        if (this.trike && this.currentTab === 'trike') this.trike.resizeCanvas();
+      }, 250);
+    });
 
     // 3. Navigation Tabs
     const tabBtns = document.querySelectorAll('.nav-tab-btn');
@@ -357,7 +369,11 @@ class AppCoordinator {
 
     // Update Tab Buttons
     document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+      const isActive = btn.getAttribute('data-tab') === tabId;
+      btn.classList.toggle('active', isActive);
+      if (isActive) {
+        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
     });
 
     // Update Views
