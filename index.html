@@ -99,67 +99,16 @@
         <div class="mascot-speech-bubble" id="mascot-speech">Hi little friend! 🐻✨</div>
 
         <!-- Soft Nursery Playmat Ground Shadow -->
-        <div class="pip-playmat-shadow"></div>
+        <div class="pip-playmat-shadow" id="pip-shadow"></div>
 
-        <!-- The Dynamic 3D Rigged Teddy Bear Character (Moves Face, Eyes & Body to Magic Stick) -->
+        <!-- The Dynamic Cartoon Character (Moves with Magic Stick, Dances to Songs) -->
         <div class="pip-puppet-container" id="mascot-container" title="Wave your magic stick or tap Pip!">
-          
-          <!-- Body Layer (Denim Overalls, Honey Pot, Sitting Legs & Paws - Breathes & Sway) -->
-          <div class="pip-body-layer" id="pip-body">
-            <img src="assets/pip_body.png" alt="Pip Body and Overalls" class="pip-body-img" draggable="false"/>
+          <div class="pip-character-stage" id="pip-character">
+            <!-- Full High-Res 3D Cartoon Character (Clean, Beautiful, No Artifacts) -->
+            <img src="assets/pip_bear.png" alt="Happy Cartoon Teddy Bear" class="pip-bear-img" id="pip-bear-img" draggable="false"/>
 
-            <!-- Overalls Honey Pot Hotspot -->
-            <div class="hotspot hotspot-honey" id="mascot-honey" title="Tickle my honey pot! 🍯">
-              <span class="honey-glow"></span>
-              <span class="honey-badge">🍯</span>
-            </div>
-
-            <!-- High Five Paws -->
-            <div class="hotspot hotspot-paw-left" id="mascot-paw-left" title="High five Pip! 🐾"></div>
-            <div class="hotspot hotspot-paw-right" id="mascot-paw-right" title="High five Pip! 🐾"></div>
-          </div>
-
-          <!-- Head / Face Layer (Turns 3D Yaw, Pitch, Roll & Leans Towards Magic Stick) -->
-          <div class="pip-head-layer" id="pip-head">
-            
-            <!-- Dynamic Eye Sockets Behind Head Fur Cutouts -->
-            <div class="pip-eye-socket eye-socket-left" id="eye-socket-left">
-              <div class="pip-sclera">
-                <div class="pip-iris-pupil" id="pupil-left">
-                  <div class="pip-pupil-center"></div>
-                  <div class="pip-glint-main"></div>
-                  <div class="pip-glint-sub">★</div>
-                </div>
-                <div class="pip-eyelid eyelid" id="eyelid-left"></div>
-              </div>
-            </div>
-
-            <div class="pip-eye-socket eye-socket-right" id="eye-socket-right">
-              <div class="pip-sclera">
-                <div class="pip-iris-pupil" id="pupil-right">
-                  <div class="pip-pupil-center"></div>
-                  <div class="pip-glint-main"></div>
-                  <div class="pip-glint-sub">★</div>
-                </div>
-                <div class="pip-eyelid eyelid" id="eyelid-right"></div>
-              </div>
-            </div>
-
-            <!-- Head Fur & Face Image with Cutout Eye Apertures -->
-            <img src="assets/pip_head.png" alt="Pip Head and Face" class="pip-head-img" draggable="false"/>
-
-            <!-- Blushing Cheeks -->
-            <div class="teddy-blush blush-left" id="blush-left">♥</div>
-            <div class="teddy-blush blush-right" id="blush-right">♥</div>
-
-            <!-- Boopable Button Nose Hotspot -->
-            <div class="hotspot hotspot-nose" id="mascot-nose" title="Boop my nose! 👃">
-              <span class="hotspot-pulse"></span>
-            </div>
-
-            <!-- Ear Hotspots -->
-            <div class="hotspot hotspot-ear-left" id="ear-left" title="Wiggle my left ear! 🐰"></div>
-            <div class="hotspot hotspot-ear-right" id="ear-right" title="Wiggle my right ear! 🐰"></div>
+            <!-- Floating Musical Notes Stage (Emits joyful notes while dancing) -->
+            <div class="pip-music-notes-container" id="pip-music-notes"></div>
           </div>
         </div>
 
@@ -413,14 +362,13 @@
       <div class="trike-stage">
         <canvas id="trike-canvas"></canvas>
 
-        <div class="creative-trike-badge" title="Lightning Trike Champion!">
-          <img src="assets/trike.jpg" alt="Lightning Trike"/>
-        </div>
-
         <div class="trike-overlay-hud">
           <div class="score-badge">
+            <div class="score-trike-avatar" title="Lightning Trike Champion!">
+              <img src="assets/trike.jpg" alt="Lightning Trike"/>
+            </div>
             <span class="score-star-icon">⭐</span>
-            <span>Stars: </span>
+            <span class="score-label">Stars:</span>
             <span id="trike-score-val">0</span>
           </div>
         </div>
@@ -447,79 +395,270 @@
         </div>
 
         <div class="robot-speech-card" id="robot-speech">
-          Beep-boop! Hello little sunshine! Let's play! 🤖✨
+          <span class="speech-sparkle">✨</span>
+          <span id="robot-speech-text">Beep-boop! Hello little sunshine! Let's play! 🤖</span>
         </div>
 
-        <div class="robot-container" id="robot-container" title="Tap Robo-Pal to tickle him!">
-          <svg viewBox="0 0 320 380" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="robotBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#FFFFFF"/>
-                <stop offset="50%" stop-color="#E2E8F0"/>
-                <stop offset="100%" stop-color="#CBD5E1"/>
-              </linearGradient>
-              <linearGradient id="robotAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#38BDF8"/>
-                <stop offset="100%" stop-color="#0284C7"/>
-              </linearGradient>
-            </defs>
+        <!-- 3D Robot Assembly with Glowing Hover Pedestal & Contact Shadow -->
+        <div class="robot-stage-wrapper">
+          <div class="robot-floor-assembly">
+            <div class="robot-pedestal-ring"></div>
+            <div class="robot-floor-shadow" id="robot-shadow"></div>
+          </div>
 
-            <!-- Antenna & Glowing Light -->
-            <line x1="160" y1="52" x2="160" y2="18" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
-            <circle id="antenna-light" cx="160" cy="14" r="12" fill="#38BDF8" style="transition: fill 0.3s; filter: drop-shadow(0 0 8px #38BDF8);"/>
+          <div class="robot-container" id="robot-container" title="Tap Robo-Pal to tickle him!">
+            <svg viewBox="0 0 360 410" class="robot-svg" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <!-- 3D Enamel Head Radial Gradient -->
+                <radialGradient id="head3DGrad" cx="35%" cy="25%" r="75%">
+                  <stop offset="0%" stop-color="#FFFFFF"/>
+                  <stop offset="35%" stop-color="#F1F5F9"/>
+                  <stop offset="75%" stop-color="#CBD5E1"/>
+                  <stop offset="100%" stop-color="#94A3B8"/>
+                </radialGradient>
 
-            <!-- Robot Head -->
-            <rect x="75" y="52" width="170" height="135" rx="36" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="4"/>
+                <!-- 3D Enamel Torso Radial Gradient -->
+                <radialGradient id="body3DGrad" cx="35%" cy="25%" r="80%">
+                  <stop offset="0%" stop-color="#FFFFFF"/>
+                  <stop offset="40%" stop-color="#F1F5F9"/>
+                  <stop offset="80%" stop-color="#CBD5E1"/>
+                  <stop offset="100%" stop-color="#94A3B8"/>
+                </radialGradient>
 
-            <!-- Cute Ear Bolts / Dials -->
-            <circle cx="65" cy="120" r="14" fill="url(#robotAccent)"/>
-            <circle cx="255" cy="120" r="14" fill="url(#robotAccent)"/>
+                <!-- 3D Chrome Segment Gradient -->
+                <linearGradient id="chromeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#64748B"/>
+                  <stop offset="25%" stop-color="#E2E8F0"/>
+                  <stop offset="50%" stop-color="#FFFFFF"/>
+                  <stop offset="75%" stop-color="#CBD5E1"/>
+                  <stop offset="100%" stop-color="#475569"/>
+                </linearGradient>
 
-            <!-- Robot Body -->
-            <rect x="90" y="200" width="140" height="120" rx="28" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="4"/>
+                <!-- 3D Toy Blue Accent Gradient -->
+                <radialGradient id="accent3DGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="#7DD3FC"/>
+                  <stop offset="35%" stop-color="#38BDF8"/>
+                  <stop offset="80%" stop-color="#0284C7"/>
+                  <stop offset="100%" stop-color="#0369A1"/>
+                </radialGradient>
 
-            <!-- Robot Tummy Meter (Heart & Energy Gauge) -->
-            <rect x="115" y="225" width="90" height="65" rx="14" fill="#0F172A"/>
-            <circle cx="160" cy="255" r="18" fill="#F43F5E"/>
-            <path d="M 152 254 C 152 248, 168 248, 168 254 C 168 262, 152 268, 152 268 C 152 268, 136 262, 136 254 C 136 248, 152 248, 152 254 Z" fill="#FFFFFF"/>
+                <!-- Dark Curved Glass Visor Screen -->
+                <radialGradient id="visorGlassGrad" cx="50%" cy="40%" r="65%">
+                  <stop offset="0%" stop-color="#1E293B"/>
+                  <stop offset="65%" stop-color="#0F172A"/>
+                  <stop offset="100%" stop-color="#020617"/>
+                </radialGradient>
 
-            <!-- Little Waving Robot Arms -->
-            <rect x="52" y="220" width="30" height="16" rx="8" fill="url(#robotAccent)" transform="rotate(25 52 220)"/>
-            <circle cx="48" cy="242" r="10" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="2"/>
+                <!-- Glass Reflection Highlight Arc -->
+                <linearGradient id="glassGlareGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="rgba(255, 255, 255, 0.45)"/>
+                  <stop offset="45%" stop-color="rgba(255, 255, 255, 0.08)"/>
+                  <stop offset="100%" stop-color="rgba(255, 255, 255, 0)"/>
+                </linearGradient>
 
-            <rect x="238" y="220" width="30" height="16" rx="8" fill="url(#robotAccent)" transform="rotate(-25 268 220)"/>
-            <circle cx="272" cy="242" r="10" fill="url(#robotBodyGrad)" stroke="#94A3B8" stroke-width="2"/>
+                <!-- Neon Glow Filter -->
+                <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                
+                <filter id="bulbGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="6" result="blur"/>
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
 
-            <!-- Cute Feet -->
-            <ellipse cx="120" cy="335" rx="22" ry="12" fill="url(#robotAccent)"/>
-            <ellipse cx="200" cy="335" rx="22" ry="12" fill="url(#robotAccent)"/>
-          </svg>
+              <!-- Antenna Stalk (3D Chrome) & Bulb -->
+              <g id="robot-antenna-assembly">
+                <rect x="176" y="24" width="8" height="42" rx="4" fill="url(#chromeGrad)"/>
+                <ellipse cx="180" cy="48" rx="7" ry="3" fill="#64748B"/>
+                <!-- Outer Corona Aura -->
+                <circle id="antenna-corona" cx="180" cy="18" r="18" fill="rgba(56, 189, 248, 0.25)" filter="url(#bulbGlow)"/>
+                <!-- 3D Glowing Bulb -->
+                <circle id="antenna-light" cx="180" cy="18" r="12" fill="#38BDF8" filter="url(#neonGlow)"/>
+                <!-- Bulb Specular Glint -->
+                <circle cx="176" cy="14" r="3.5" fill="#FFFFFF" opacity="0.85"/>
+              </g>
 
-          <!-- LED Interactive Face Screen -->
-          <div class="robot-screen-face" id="robot-face">
-            ( ^ _ ^ )
+              <!-- Robot Head Shell (3D Sculpted Bevels) -->
+              <g id="robot-head-group">
+                <!-- Drop shadow behind head onto body -->
+                <rect x="91" y="66" width="178" height="136" rx="42" fill="rgba(0,0,0,0.18)" filter="url(#neonGlow)"/>
+                <!-- Outer Chrome Bevel Rim -->
+                <rect x="88" y="62" width="184" height="142" rx="44" fill="url(#chromeGrad)"/>
+                <!-- Main Volumetric 3D Head Enamel Shell -->
+                <rect x="92" y="65" width="176" height="136" rx="40" fill="url(#head3DGrad)"/>
+                <!-- Top Light Sheen -->
+                <path d="M 120 70 Q 180 66 240 70 Q 220 78 140 78 Z" fill="rgba(255,255,255,0.7)"/>
+
+                <!-- Left 3D Audio Headphone Ear Cup -->
+                <g id="robot-ear-left">
+                  <rect x="74" y="112" width="18" height="42" rx="9" fill="url(#chromeGrad)"/>
+                  <circle cx="80" cy="133" r="15" fill="url(#accent3DGrad)"/>
+                  <circle id="ear-led-left" cx="80" cy="133" r="7" fill="#0F172A" stroke="#38BDF8" stroke-width="2.5" filter="url(#neonGlow)"/>
+                  <circle cx="78" cy="131" r="2" fill="#FFFFFF" opacity="0.8"/>
+                </g>
+
+                <!-- Right 3D Audio Headphone Ear Cup -->
+                <g id="robot-ear-right">
+                  <rect x="268" y="112" width="18" height="42" rx="9" fill="url(#chromeGrad)"/>
+                  <circle cx="280" cy="133" r="15" fill="url(#accent3DGrad)"/>
+                  <circle id="ear-led-right" cx="280" cy="133" r="7" fill="#0F172A" stroke="#38BDF8" stroke-width="2.5" filter="url(#neonGlow)"/>
+                  <circle cx="278" cy="131" r="2" fill="#FFFFFF" opacity="0.8"/>
+                </g>
+
+                <!-- 3D Curved OLED Visor Screen -->
+                <rect x="110" y="85" width="140" height="96" rx="24" fill="#020617" stroke="#334155" stroke-width="3"/>
+                <rect x="112" y="87" width="136" height="92" rx="22" fill="url(#visorGlassGrad)"/>
+                <!-- Glass Curved Glare Arc across top of visor -->
+                <path d="M 116 93 Q 180 88 244 93 Q 234 118 126 118 Z" fill="url(#glassGlareGrad)"/>
+
+                <!-- Neon Expressive Eyes (Dynamic SVG Canvas) -->
+                <g id="robot-eyes-svg" filter="url(#neonGlow)">
+                  <!-- Left Eye Graphic -->
+                  <g id="eye-left-container" transform="translate(142, 132)">
+                    <path id="eye-left-path" d="M -16 -4 Q 0 -18 16 -4" stroke="#38BDF8" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+                  </g>
+                  <!-- Right Eye Graphic -->
+                  <g id="eye-right-container" transform="translate(218, 132)">
+                    <path id="eye-right-path" d="M -16 -4 Q 0 -18 16 -4" stroke="#38BDF8" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+                  </g>
+                  <!-- Cute Rosy LED Cheeks -->
+                  <ellipse id="cheek-left" cx="132" cy="154" rx="6" ry="3.5" fill="rgba(244, 63, 94, 0.55)"/>
+                  <ellipse id="cheek-right" cx="228" cy="154" rx="6" ry="3.5" fill="rgba(244, 63, 94, 0.55)"/>
+                  <!-- Mouth / Speaker Equalizer Dots -->
+                  <g id="robot-mouth-dots" opacity="0.9">
+                    <circle cx="172" cy="156" r="2" fill="#38BDF8"/>
+                    <circle cx="180" cy="156" r="2.5" fill="#38BDF8"/>
+                    <circle cx="188" cy="156" r="2" fill="#38BDF8"/>
+                  </g>
+                </g>
+              </g>
+
+              <!-- Neck Joint (3D Chrome Accordion Rings) -->
+              <g id="robot-neck">
+                <ellipse cx="180" cy="204" rx="28" ry="6" fill="url(#chromeGrad)"/>
+                <ellipse cx="180" cy="208" rx="24" ry="5" fill="#475569"/>
+                <ellipse cx="180" cy="212" rx="26" ry="6" fill="url(#chromeGrad)"/>
+              </g>
+
+              <!-- Left Articulated Arm & Hand -->
+              <g id="robot-left-arm" transform-origin="84 235">
+                <circle cx="84" cy="235" r="13" fill="url(#chromeGrad)"/>
+                <!-- Forearm -->
+                <path d="M 80 236 Q 58 248 52 272" stroke="url(#accent3DGrad)" stroke-width="16" stroke-linecap="round" fill="none"/>
+                <!-- Magnetic Mitten Hand -->
+                <circle cx="50" cy="274" r="13" fill="url(#head3DGrad)" stroke="#94A3B8" stroke-width="2.5"/>
+                <circle cx="48" cy="272" r="4" fill="#FFFFFF" opacity="0.8"/>
+              </g>
+
+              <!-- Right Articulated Arm & Hand -->
+              <g id="robot-right-arm" transform-origin="276 235">
+                <circle cx="276" cy="235" r="13" fill="url(#chromeGrad)"/>
+                <!-- Forearm -->
+                <path d="M 280 236 Q 302 248 308 272" stroke="url(#accent3DGrad)" stroke-width="16" stroke-linecap="round" fill="none"/>
+                <!-- Magnetic Mitten Hand -->
+                <circle cx="310" cy="274" r="13" fill="url(#head3DGrad)" stroke="#94A3B8" stroke-width="2.5"/>
+                <circle cx="308" cy="272" r="4" fill="#FFFFFF" opacity="0.8"/>
+              </g>
+
+              <!-- Robot Torso Body (3D Sculpted) -->
+              <g id="robot-body-group">
+                <!-- Outer Chrome Bevel Rim -->
+                <rect x="105" y="210" width="150" height="130" rx="34" fill="url(#chromeGrad)"/>
+                <!-- Main Volumetric Torso Enamel Shell -->
+                <rect x="108" y="213" width="144" height="124" rx="32" fill="url(#body3DGrad)"/>
+                <!-- Top Light Specular Highlight -->
+                <path d="M 130 216 Q 180 213 230 216 Q 215 224 145 224 Z" fill="rgba(255,255,255,0.7)"/>
+
+                <!-- 3D Chest Hologram Window -->
+                <rect x="130" y="235" width="100" height="74" rx="18" fill="#020617" stroke="#334155" stroke-width="2.5"/>
+                <rect x="132" y="237" width="96" height="70" rx="16" fill="url(#visorGlassGrad)"/>
+
+                <!-- 3D Beating Heart Gauge -->
+                <g id="robot-chest-meter" filter="url(#neonGlow)">
+                  <!-- Circular Ring Gauge -->
+                  <circle cx="180" cy="272" r="22" fill="#0F172A" stroke="rgba(244, 63, 94, 0.3)" stroke-width="3"/>
+                  <!-- Glowing 3D Heart -->
+                  <path id="robot-heart-shape" d="M 180 282 C 170 272 162 264 162 257 C 162 250 167 245 174 245 C 178 245 180 248 180 248 C 180 248 182 245 186 245 C 193 245 198 250 198 257 C 198 264 190 272 180 282 Z" fill="#F43F5E"/>
+                  <!-- Heart Sheen Glint -->
+                  <circle cx="172" cy="252" r="2.5" fill="#FFFFFF" opacity="0.85"/>
+                  
+                  <!-- Dancing Equalizer Bars (Jump to music!) -->
+                  <g id="robot-chest-eq" transform="translate(155, 298)">
+                    <rect id="eq-b1" x="0" y="-8" width="5" height="10" rx="2.5" fill="#38BDF8"/>
+                    <rect id="eq-b2" x="10" y="-14" width="5" height="16" rx="2.5" fill="#34D399"/>
+                    <rect id="eq-b3" x="20" y="-18" width="5" height="20" rx="2.5" fill="#FBBF24"/>
+                    <rect id="eq-b4" x="30" y="-13" width="5" height="15" rx="2.5" fill="#F472B6"/>
+                    <rect id="eq-b5" x="40" y="-7" width="5" height="9" rx="2.5" fill="#A855F7"/>
+                  </g>
+                </g>
+
+                <!-- Glass Sheen Across Chest Window -->
+                <path d="M 134 240 L 226 240 L 195 264 L 134 264 Z" fill="url(#glassGlareGrad)" opacity="0.5"/>
+              </g>
+
+              <!-- Hovering 3D Magnetic Feet with Blue Ion Thrusters -->
+              <g id="robot-feet-group">
+                <!-- Left Foot -->
+                <g id="robot-foot-left">
+                  <!-- Ion Thruster Cone -->
+                  <polygon id="thruster-left" points="135,365 147,390 123,390" fill="#38BDF8" opacity="0.65" filter="url(#neonGlow)"/>
+                  <ellipse cx="135" cy="354" rx="24" ry="14" fill="url(#accent3DGrad)"/>
+                  <ellipse cx="135" cy="350" rx="16" ry="7" fill="url(#chromeGrad)"/>
+                  <circle cx="130" cy="348" r="3" fill="#FFFFFF" opacity="0.8"/>
+                </g>
+
+                <!-- Right Foot -->
+                <g id="robot-foot-right">
+                  <!-- Ion Thruster Cone -->
+                  <polygon id="thruster-right" points="225,365 237,390 213,390" fill="#38BDF8" opacity="0.65" filter="url(#neonGlow)"/>
+                  <ellipse cx="225" cy="354" rx="24" ry="14" fill="url(#accent3DGrad)"/>
+                  <ellipse cx="225" cy="350" rx="16" ry="7" fill="url(#chromeGrad)"/>
+                  <circle cx="220" cy="348" r="3" fill="#FFFFFF" opacity="0.8"/>
+                </g>
+              </g>
+            </svg>
           </div>
         </div>
 
-        <!-- Robot Dialogue / Action Triggers -->
+        <!-- Robot Interactive Dialogue / 6 Music Toggle Buttons -->
         <div class="robot-dialogue-grid">
-          <button class="robot-pill-btn" id="robo-btn-hello">
-            <span>👋</span> Say Hello!
+          <button class="robot-pill-btn" id="robo-btn-hello" data-track="hello" title="Click to play / stop music">
+            <span class="btn-icon">👋</span>
+            <span class="btn-label">Say Hello!</span>
+            <span class="music-wave-bars"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>
           </button>
-          <button class="robot-pill-btn" id="robo-btn-tickle">
-            <span>😂</span> Tickle Me!
+          <button class="robot-pill-btn" id="robo-btn-tickle" data-track="tickle" title="Click to play / stop music">
+            <span class="btn-icon">😂</span>
+            <span class="btn-label">Tickle Me!</span>
+            <span class="music-wave-bars"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>
           </button>
-          <button class="robot-pill-btn" id="robo-btn-dance">
-            <span>💃</span> Dance Party!
+          <button class="robot-pill-btn" id="robo-btn-dance" data-track="dance" title="Click to play / stop music">
+            <span class="btn-icon">💃</span>
+            <span class="btn-label">Dance Party!</span>
+            <span class="music-wave-bars"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>
           </button>
-          <button class="robot-pill-btn" id="robo-btn-peekaboo">
-            <span>🙈</span> Peekaboo!
+          <button class="robot-pill-btn" id="robo-btn-peekaboo" data-track="peekaboo" title="Click to play / stop music">
+            <span class="btn-icon">🙈</span>
+            <span class="btn-label">Peekaboo!</span>
+            <span class="music-wave-bars"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>
           </button>
-          <button class="robot-pill-btn" id="robo-btn-highfive">
-            <span>🖐️</span> High Five!
+          <button class="robot-pill-btn" id="robo-btn-highfive" data-track="highfive" title="Click to play / stop music">
+            <span class="btn-icon">🖐️</span>
+            <span class="btn-label">High Five!</span>
+            <span class="music-wave-bars"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>
           </button>
-          <button class="robot-pill-btn" id="robo-btn-lullaby">
-            <span>🌙</span> Lullaby
+          <button class="robot-pill-btn" id="robo-btn-lullaby" data-track="lullaby" title="Click to play / stop music">
+            <span class="btn-icon">🌙</span>
+            <span class="btn-label">Lullaby</span>
+            <span class="music-wave-bars"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>
           </button>
         </div>
       </div>

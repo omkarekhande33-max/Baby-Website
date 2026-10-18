@@ -136,15 +136,40 @@ class ParticleFXEngine {
       this.ctx.globalAlpha = p.alpha;
 
       if (p.type === 'stars') {
-        this.ctx.font = `${p.size * 2.2}px sans-serif`;
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('⭐', 0, 0);
+        const s = p.size * 1.35;
+        // 3D golden star with radiant metallic gradient
+        const grad = this.ctx.createRadialGradient(0, -s * 0.3, 0, 0, 0, s);
+        grad.addColorStop(0, '#FFFBEB');
+        grad.addColorStop(0.35, '#FDE047');
+        grad.addColorStop(0.85, '#F59E0B');
+        grad.addColorStop(1, '#D97706');
+        this.ctx.fillStyle = grad;
+        this.ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const aOuter = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+          const aInner = aOuter + Math.PI / 5;
+          if (i === 0) {
+            this.ctx.moveTo(Math.cos(aOuter) * s, Math.sin(aOuter) * s);
+          } else {
+            this.ctx.lineTo(Math.cos(aOuter) * s, Math.sin(aOuter) * s);
+          }
+          this.ctx.lineTo(Math.cos(aInner) * (s * 0.45), Math.sin(aInner) * (s * 0.45));
+        }
+        this.ctx.closePath();
+        this.ctx.fill();
       } else if (p.type === 'hearts') {
-        this.ctx.font = `${p.size * 2.2}px sans-serif`;
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('💖', 0, 0);
+        const s = p.size * 1.15;
+        const grad = this.ctx.createRadialGradient(-s * 0.2, -s * 0.2, 0, 0, 0, s);
+        grad.addColorStop(0, '#FDA4AF');
+        grad.addColorStop(0.4, '#F43F5E');
+        grad.addColorStop(1, '#BE123C');
+        this.ctx.fillStyle = grad;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, s * 0.3);
+        this.ctx.bezierCurveTo(-s * 0.6, -s * 0.5, -s, s * 0.2, 0, s);
+        this.ctx.bezierCurveTo(s, s * 0.2, s * 0.6, -s * 0.5, 0, s * 0.3);
+        this.ctx.closePath();
+        this.ctx.fill();
       } else if (p.type === 'confetti') {
         this.ctx.fillStyle = p.color;
         this.ctx.fillRect(-p.size / 2, -p.size, p.size, p.size * 1.5);

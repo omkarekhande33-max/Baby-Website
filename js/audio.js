@@ -31,6 +31,14 @@ class BabyAudioEngine {
       0, 0, 4, 4, 5, 5, 4, // Twinkle twinkle little star
       3, 3, 2, 2, 1, 1, 0  // How I wonder what you are
     ];
+
+    // Robot Song Player State (Toggleable background songs for the 6 buttons)
+    this.activeRobotSong = null;
+    this.robotSongTimer = null;
+    this.robotSongStep = 0;
+    this.robotSongTimeouts = [];
+    this.onRobotSongStep = null;
+    this.onRobotSongEnd = null;
   }
 
   init() {
@@ -333,6 +341,242 @@ class BabyAudioEngine {
     this.lullabyTimer = setTimeout(() => {
       this.playNextLullabyNote();
     }, 650);
+  }
+
+  /**
+   * Play a single synthesizer note with envelope
+   */
+  playSynthNote(freq, duration = 0.3, type = 'sine', volume = 0.22, detune = 0) {
+    this.ensureContext();
+    if (!this.ctx || this.isMuted) return;
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (detune) osc.detune.setValueAtTime(detune, now);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(type === 'square' ? 1800 : 3000, now);
+
+    // Smooth envelope: soft attack, gentle exponential release
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.compressor);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  /**
+   * Play or Toggle Songs for the 6 Robot Companion Buttons
+   * @param {string} trackId - 'hello' | 'tickle' | 'dance' | 'peekaboo' | 'highfive' | 'lullaby'
+   * @param {function} onStep - Callback on each musical note for dancing / visualizer
+   * @param {function} onEnd - Callback when song ends
+   */
+  playRobotSong(trackId, onStep = null, onEnd = null) {
+    this.ensureContext();
+    this.stopRobotSong();
+
+    this.activeRobotSong = trackId;
+    this.onRobotSongStep = onStep;
+    this.onRobotSongEnd = onEnd;
+    this.robotSongStep = 0;
+
+    // Note frequencies table
+    const N = {
+      C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, B4: 493.88,
+      C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00, B5: 987.77,
+      C6: 1046.50, D6: 1174.66, E6: 1318.51, G6: 1567.98
+    };
+
+    // Score sheets for the 6 songs
+    const songs = {
+      // 1. Say Hello: Welcoming, joyful sunbeam melody
+      hello: {
+        tempo: 260,
+        loop: true,
+        notes: [
+          { freq: N.C5, dur: 0.28, type: 'triangle' },
+          { freq: N.E5, dur: 0.28, type: 'sine' },
+          { freq: N.G5, dur: 0.32, type: 'triangle' },
+          { freq: N.C6, dur: 0.55, type: 'sine' },
+          { freq: N.G5, dur: 0.28, type: 'triangle' },
+          { freq: N.A5, dur: 0.32, type: 'sine' },
+          { freq: N.F5, dur: 0.28, type: 'triangle' },
+          { freq: N.G5, dur: 0.55, type: 'sine' },
+          { freq: N.E5, dur: 0.28, type: 'triangle' },
+          { freq: N.F5, dur: 0.28, type: 'sine' },
+          { freq: N.D5, dur: 0.35, type: 'triangle' },
+          { freq: N.C5, dur: 0.70, type: 'sine' }
+        ]
+      },
+      // 2. Tickle Me: Staccato, giggly, bouncing melody with cute chirp intervals
+      tickle: {
+        tempo: 160,
+        loop: true,
+        notes: [
+          { freq: N.G5, dur: 0.14, type: 'square' },
+          { freq: N.E5, dur: 0.14, type: 'triangle' },
+          { freq: N.G5, dur: 0.14, type: 'square' },
+          { freq: N.A5, dur: 0.18, type: 'triangle' },
+          { freq: N.G5, dur: 0.14, type: 'square' },
+          { freq: N.C6, dur: 0.28, type: 'sine' },
+          { freq: N.A5, dur: 0.14, type: 'triangle' },
+          { freq: N.G5, dur: 0.16, type: 'square' },
+          { freq: N.E5, dur: 0.14, type: 'triangle' },
+          { freq: N.D5, dur: 0.18, type: 'square' },
+          { freq: N.C5, dur: 0.32, type: 'sine' },
+          { freq: N.E5, dur: 0.14, type: 'triangle' }
+        ]
+      },
+      // 3. Dance Party: Catchy, syncopated electronic funk groove with bass and upbeat leads
+      dance: {
+        tempo: 190,
+        loop: true,
+        notes: [
+          { freq: N.C4, dur: 0.22, type: 'triangle', bass: true },
+          { freq: N.C5, dur: 0.18, type: 'square' },
+          { freq: N.E5, dur: 0.18, type: 'sine' },
+          { freq: N.G5, dur: 0.22, type: 'square' },
+          { freq: N.A5, dur: 0.22, type: 'sine' },
+          { freq: N.G4, dur: 0.22, type: 'triangle', bass: true },
+          { freq: N.G5, dur: 0.18, type: 'square' },
+          { freq: N.F5, dur: 0.18, type: 'sine' },
+          { freq: N.E5, dur: 0.22, type: 'square' },
+          { freq: N.D5, dur: 0.22, type: 'sine' },
+          { freq: N.F4, dur: 0.22, type: 'triangle', bass: true },
+          { freq: N.A4, dur: 0.18, type: 'square' },
+          { freq: N.C5, dur: 0.18, type: 'sine' },
+          { freq: N.E5, dur: 0.24, type: 'square' },
+          { freq: N.D5, dur: 0.18, type: 'sine' },
+          { freq: N.C5, dur: 0.45, type: 'square' }
+        ]
+      },
+      // 4. Peekaboo: Playful mystery ascending scale followed by bright celebratory fanfare
+      peekaboo: {
+        tempo: 280,
+        loop: true,
+        notes: [
+          { freq: N.C5, dur: 0.22, type: 'triangle' },
+          { freq: N.D5, dur: 0.22, type: 'sine' },
+          { freq: N.E5, dur: 0.25, type: 'triangle' },
+          { freq: N.F5, dur: 0.25, type: 'sine' },
+          { freq: N.G5, dur: 0.30, type: 'triangle' },
+          { freq: N.A5, dur: 0.45, type: 'sine' },
+          // Dramatic pause
+          { freq: 0, dur: 0.35, type: 'rest' },
+          // "PEEKABOO!"
+          { freq: N.C6, dur: 0.45, type: 'square' },
+          { freq: N.G5, dur: 0.25, type: 'sine' },
+          { freq: N.E5, dur: 0.25, type: 'triangle' },
+          { freq: N.C6, dur: 0.65, type: 'sine' }
+        ]
+      },
+      // 5. High Five: Heroic, celebratory victory fanfare
+      highfive: {
+        tempo: 220,
+        loop: true,
+        notes: [
+          { freq: N.G4, dur: 0.16, type: 'triangle' },
+          { freq: N.C5, dur: 0.16, type: 'square' },
+          { freq: N.E5, dur: 0.18, type: 'triangle' },
+          { freq: N.G5, dur: 0.32, type: 'square' },
+          { freq: N.E5, dur: 0.16, type: 'triangle' },
+          { freq: N.G5, dur: 0.22, type: 'square' },
+          { freq: N.C6, dur: 0.60, type: 'sine' },
+          { freq: N.B5, dur: 0.20, type: 'triangle' },
+          { freq: N.C6, dur: 0.80, type: 'sine' }
+        ]
+      },
+      // 6. Lullaby: Soothing, gentle bedtime music box
+      lullaby: {
+        tempo: 580,
+        loop: true,
+        notes: [
+          { freq: N.C5, dur: 0.9, type: 'sine' },
+          { freq: N.C5, dur: 0.9, type: 'sine' },
+          { freq: N.G5, dur: 0.9, type: 'sine' },
+          { freq: N.G5, dur: 0.9, type: 'sine' },
+          { freq: N.A5, dur: 0.9, type: 'sine' },
+          { freq: N.A5, dur: 0.9, type: 'sine' },
+          { freq: N.G5, dur: 1.4, type: 'sine' },
+          { freq: N.F5, dur: 0.9, type: 'sine' },
+          { freq: N.F5, dur: 0.9, type: 'sine' },
+          { freq: N.E5, dur: 0.9, type: 'sine' },
+          { freq: N.E5, dur: 0.9, type: 'sine' },
+          { freq: N.D5, dur: 0.9, type: 'sine' },
+          { freq: N.D5, dur: 0.9, type: 'sine' },
+          { freq: N.C5, dur: 1.6, type: 'sine' }
+        ]
+      }
+    };
+
+    const song = songs[trackId] || songs.hello;
+
+    const playStep = () => {
+      if (this.activeRobotSong !== trackId) return;
+
+      const idx = this.robotSongStep % song.notes.length;
+      const note = song.notes[idx];
+
+      if (note && note.type !== 'rest' && note.freq > 0) {
+        this.playSynthNote(note.freq, note.dur, note.type, note.bass ? 0.32 : 0.22);
+      }
+
+      if (this.onRobotSongStep) {
+        this.onRobotSongStep(trackId, this.robotSongStep, note);
+      }
+
+      this.robotSongStep++;
+
+      // Check if finished and whether to loop or end
+      if (this.robotSongStep >= song.notes.length && !song.loop) {
+        this.stopRobotSong();
+        if (this.onRobotSongEnd) this.onRobotSongEnd(trackId);
+        return;
+      }
+
+      this.robotSongTimer = setTimeout(playStep, song.tempo);
+    };
+
+    playStep();
+    return true;
+  }
+
+  /**
+   * Stop any active Robot Song
+   */
+  stopRobotSong() {
+    if (this.robotSongTimer) {
+      clearTimeout(this.robotSongTimer);
+      this.robotSongTimer = null;
+    }
+    this.robotSongTimeouts.forEach(t => clearTimeout(t));
+    this.robotSongTimeouts = [];
+
+    const stoppedTrack = this.activeRobotSong;
+    this.activeRobotSong = null;
+
+    if (this.onRobotSongEnd && stoppedTrack) {
+      this.onRobotSongEnd(stoppedTrack);
+    }
+    return stoppedTrack;
+  }
+
+  /**
+   * Check if a specific track (or any track) is currently playing
+   */
+  isRobotSongPlaying(trackId = null) {
+    if (!this.activeRobotSong) return false;
+    return trackId ? this.activeRobotSong === trackId : true;
   }
 }
 
