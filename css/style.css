@@ -58,9 +58,18 @@
 }
 
 html, body {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   overflow: hidden;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
   font-family: var(--font-body);
   color: var(--color-text-dark);
   background: var(--bg-gradient-day);
@@ -94,13 +103,19 @@ button, a, input, select, textarea,
 
 /* App Container */
 #app-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
   height: 100dvh; /* Dynamic viewport height for modern iOS & Android browsers */
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overflow-x: hidden;
   overscroll-behavior: none;
 }
 
@@ -428,7 +443,10 @@ button, a, input, select, textarea,
   top: 0;
   left: 0;
   width: 100%;
+  max-width: 100%;
   height: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
   opacity: 0;
   visibility: hidden;
   transform: scale(0.96);
@@ -766,6 +784,8 @@ button, a, input, select, textarea,
 .mascot-action-bar {
   position: absolute;
   bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 14px;
   background: var(--glass-bg);
@@ -1387,8 +1407,9 @@ body.night-mode .robot-svg {
 .robot-dialogue-grid {
   position: absolute;
   bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
   max-width: 680px;
@@ -2672,12 +2693,61 @@ body.night-mode .robot-pill-btn.is-playing {
    ========================================================================== */
 
 @media (max-width: 768px) {
+  /* --- 0. Disable heavy GPU backdrop filters on mobile for blazing 60+ FPS --- */
+  .site-header,
+  .brand-badge,
+  .nav-tabs,
+  .control-btn,
+  .bedroom-top-bar,
+  .bedroom-card,
+  .paint-toolbar,
+  .score-badge,
+  .robot-speech-card,
+  .robot-dialogue-grid,
+  .profile-card,
+  .sticker-book-section,
+  .artworks-gallery-section,
+  .song-btn,
+  .mascot-speech-bubble,
+  .trike-touch-prompter {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Crisp, high-performance solid/semi-opaque mobile surfaces */
+  .brand-badge,
+  .nav-tabs,
+  .control-btn,
+  .paint-toolbar,
+  .song-action-bar,
+  .robot-dialogue-grid,
+  .profile-card,
+  .sticker-book-section,
+  .artworks-gallery-section {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  body.night-mode .brand-badge,
+  body.night-mode .nav-tabs,
+  body.night-mode .control-btn,
+  body.night-mode .paint-toolbar,
+  body.night-mode .song-action-bar,
+  body.night-mode .robot-dialogue-grid,
+  body.night-mode .profile-card,
+  body.night-mode .sticker-book-section,
+  body.night-mode .artworks-gallery-section {
+    background: rgba(18, 24, 48, 0.95) !important;
+  }
+
   /* --- 1. Top Header & Nav Strip --- */
   .site-header {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 6px;
     display: flex;
     flex-wrap: wrap;
@@ -2686,12 +2756,14 @@ body.night-mode .robot-pill-btn.is-playing {
     gap: 8px;
     z-index: 100;
     pointer-events: none;
+    overflow: hidden;
   }
 
   .brand-badge {
     order: 1;
     padding: 6px 12px;
     gap: 8px;
+    max-width: 60%;
   }
 
   .brand-icon {
@@ -2699,12 +2771,16 @@ body.night-mode .robot-pill-btn.is-playing {
   }
 
   .brand-title {
-    font-size: 1.05rem;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .header-controls {
     order: 2;
     gap: 6px;
+    flex-shrink: 0;
   }
 
   .control-btn {
@@ -2717,6 +2793,7 @@ body.night-mode .robot-pill-btn.is-playing {
     order: 3;
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -2769,6 +2846,10 @@ body.night-mode .robot-pill-btn.is-playing {
     padding-top: calc(env(safe-area-inset-top, 0px) + 85px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 75px);
     justify-content: center;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .pip-puppet-container {
@@ -2801,12 +2882,16 @@ body.night-mode .robot-pill-btn.is-playing {
   }
 
   .song-action-bar {
+    position: absolute;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
     padding: 6px 10px;
     gap: 6px;
-    width: calc(100% - 20px);
-    max-width: 440px;
+    width: calc(100% - 24px);
+    max-width: 420px;
     justify-content: center;
+    box-sizing: border-box;
   }
 
   .song-btn {

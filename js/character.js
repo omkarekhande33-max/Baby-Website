@@ -315,16 +315,20 @@ class MascotController {
     const normY = Math.max(-1, Math.min(1, (clientY - centerY) / (window.innerHeight * 0.45)));
 
     const isDancing = this.songPlayer && this.songPlayer.isPlaying;
+    const isMobile = window.innerWidth <= 768;
 
     // Expressive 3D Euler angles & translation towards the magic stick
-    this.targetYaw = normX * (isDancing ? 12 : 22);      // Head & body turn left/right
-    this.targetPitch = -normY * (isDancing ? 8 : 16);   // Look up/down
-    this.targetRoll = normX * (isDancing ? 4 : 7);       // Cute playful tilt
-    this.targetX = normX * (isDancing ? 12 : 32);        // Translate towards stick
-    this.targetY = normY * (isDancing ? 6 : 18);
+    // On mobile, targetX is 0 so Pip turns and tilts cutely without sliding off the left/right screen edge!
+    this.targetYaw = normX * (isDancing ? 10 : (isMobile ? 14 : 22));
+    this.targetPitch = -normY * (isDancing ? 6 : (isMobile ? 10 : 16));
+    this.targetRoll = normX * (isDancing ? 3 : (isMobile ? 4 : 7));
+    this.targetX = isMobile ? 0 : (normX * (isDancing ? 10 : 28));
+    this.targetY = isMobile ? (normY * 4) : (normY * (isDancing ? 6 : 16));
   }
 
   startRenderLoop() {
+    let lastYaw = 0, lastPitch = 0, lastRoll = 0, lastX = 0, lastY = 0;
+
     const loop = () => {
       // Smooth spring lerp physics (fast 0.16 factor)
       const lerp = 0.16;
@@ -336,7 +340,18 @@ class MascotController {
 
       const isDancing = this.songPlayer && this.songPlayer.isPlaying;
 
-      if (this.container && !this.isBouncing) {
+      const delta = Math.abs(this.currentYaw - lastYaw) + 
+                    Math.abs(this.currentPitch - lastPitch) + 
+                    Math.abs(this.currentX - lastX);
+
+      // Only perform DOM updates when values have meaningfully changed or character is dancing
+      if (this.container && !this.isBouncing && (delta > 0.05 || isDancing)) {
+        lastYaw = this.currentYaw;
+        lastPitch = this.currentPitch;
+        lastRoll = this.currentRoll;
+        lastX = this.currentX;
+        lastY = this.currentY;
+
         if (!isDancing) {
           // Full 3D motion following the magic wand
           this.container.style.transform = `perspective(1000px) rotateY(${this.currentYaw.toFixed(2)}deg) rotateX(${this.currentPitch.toFixed(2)}deg) rotateZ(${this.currentRoll.toFixed(2)}deg) translate3d(${this.currentX.toFixed(1)}px, ${this.currentY.toFixed(1)}px, 0)`;
